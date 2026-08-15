@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammar Chart — Jack, Jia & Zafir's Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-navy: #1F1730;
+    --bg-navy-deep: #140D22;
+    --panel: #2E2242;
+    --panel-line: rgba(255,196,64,0.28);
+    --gold: #F0AC1E;
+    --gold-soft: #FFDA6E;
+    --lavender: #A860D6;
+    --lavender-soft: #DDA8F7;
+    --feather: #1FA8C4;
+    --feather-soft: #5FE3F2;
+    --cream: #FFF3D6;
+    --ink: #EFE8FC;
+    --back-red: #B23A2E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(168,96,214,0.16), transparent 40%),
+      radial-gradient(circle at 90% 15%, rgba(95,227,242,0.10), transparent 40%),
+      linear-gradient(180deg, var(--bg-navy) 0%, var(--bg-navy-deep) 100%);
+    min-height: 100vh;
+  }
+
+  .app { max-width: 640px; margin: 0 auto; padding-bottom: 48px; }
+
+  header.bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0D0A1A;
+    border-bottom: 3px solid var(--gold);
+    padding: 18px 20px;
+    box-shadow: 0 2px 20px rgba(232,166,40,0.35);
+  }
+
+  header.bar h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(1.1rem, 5.5vw, 1.5rem);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+    color: var(--gold-soft);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.4), 0 0 18px rgba(255,210,98,0.45);
+  }
+
+  .back-btn {
+    background: var(--back-red);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #7A2419;
+  }
+  .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #7A2419; }
+
+  .titleblock {
+    text-align: center;
+    padding: 28px 24px 8px;
+  }
+  .titleblock .kicker {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin: 0 0 6px;
+  }
+  .titleblock h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin: 0;
+    color: var(--cream);
+  }
+
+  .group {
+    margin: 26px 18px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,210,98,0.06);
+  }
+  .group.gold { box-shadow: 0 6px 22px rgba(0,0,0,0.4), 0 0 26px rgba(232,166,40,0.22); }
+  .group.lavender { box-shadow: 0 6px 22px rgba(0,0,0,0.4), 0 0 26px rgba(168,96,214,0.22); }
+  .group.feather { box-shadow: 0 6px 22px rgba(0,0,0,0.4), 0 0 26px rgba(31,168,196,0.22); }
+
+  .group-header {
+    padding: 14px 20px;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: #1B1533;
+  }
+  .group-header .sub {
+    display: block;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+
+  .group.gold .group-header { background: linear-gradient(90deg, var(--gold-soft), var(--gold)); }
+  .group.lavender .group-header { background: linear-gradient(90deg, var(--lavender-soft), var(--lavender)); color: #21123A; }
+  .group.feather .group-header { background: linear-gradient(90deg, var(--feather-soft), var(--feather)); color: #0E2E36; }
+
+  .entry {
+    padding: 16px 20px;
+    border-top: 1px solid var(--panel-line);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .word-pill {
+    flex: 0 0 auto;
+    min-width: 84px;
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border-radius: 999px;
+    color: #1B1533;
+  }
+  .group.gold .word-pill { background: linear-gradient(135deg, var(--gold-soft), var(--gold)); box-shadow: 0 0 14px rgba(255,210,98,0.5); }
+  .group.lavender .word-pill { background: linear-gradient(135deg, var(--lavender-soft), var(--lavender)); color: #fff; box-shadow: 0 0 14px rgba(168,96,214,0.5); }
+  .group.feather .word-pill { background: linear-gradient(135deg, var(--feather-soft), var(--feather)); color: #fff; box-shadow: 0 0 14px rgba(31,168,196,0.5); }
+
+  .entry-text { flex: 1; }
+  .rule {
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin: 0 0 4px;
+    opacity: 0.9;
+  }
+  .example {
+    font-size: 0.98rem;
+    margin: 0;
+    color: var(--cream);
+  }
+  .example .hl {
+    font-weight: 800;
+  }
+  .group.gold .example .hl { color: var(--gold-soft); }
+  .group.lavender .example .hl { color: var(--lavender-soft); }
+  .group.feather .example .hl { color: var(--feather-soft); }
+
+  .mnemonic-box {
+    margin: 30px 18px 0;
+    padding: 20px 22px;
+    border-radius: 14px;
+    border: 1px dashed var(--gold);
+    background: rgba(212,162,76,0.08);
+    text-align: center;
+  }
+  .mnemonic-box p {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    line-height: 1.5;
+    color: var(--gold-soft);
+  }
+  .mnemonic-box .hl {
+    color: var(--lavender-soft);
+    font-weight: 800;
+  }
+  .mnemonic-box .hl2 {
+    color: var(--feather-soft);
+    font-weight: 800;
+  }
+
+  .footnote {
+    text-align: center;
+    font-size: 0.75rem;
+    color: rgba(233,227,245,0.5);
+    margin: 18px 24px 0;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <h1>Grammar Chart</h1>
+    <button class="back-btn" type="button" onclick="history.back()">Back</button>
+  </header>
+
+  <div class="titleblock">
+    <p class="kicker">Prepositions of Position</p>
+    <h2>Nine words for where things are.</h2>
+  </div>
+
+  <!-- GROUP 1 — GAP IN SPACE -->
+  <section class="group gold">
+    <div class="group-header">
+      Higher, Lower, Across
+      <span class="sub">Above · Below · Over</span>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Above</span>
+      <div class="entry-text">
+        <p class="rule">Higher than something else, with a space between them.</p>
+        <p class="example">The clock hangs <span class="hl">above</span> the fireplace.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Below</span>
+      <div class="entry-text">
+        <p class="rule">Lower than something else, with a space between them.</p>
+        <p class="example">The cat is asleep <span class="hl">below</span> the kitchen table.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Over</span>
+      <div class="entry-text">
+        <p class="rule">Across from one side to the other, high above — or covering something with contact.</p>
+        <p class="example">She threw a blanket <span class="hl">over</span> the sofa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GROUP 2 — HOW CLOSE -->
+  <section class="group lavender">
+    <div class="group-header">
+      How Close
+      <span class="sub">Near · Close To · Next To</span>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Near</span>
+      <div class="entry-text">
+        <p class="rule">Means the same as "close to." Never use the word "to" with "near."</p>
+        <p class="example">The bus stop is <span class="hl">near</span> the supermarket.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Close To</span>
+      <div class="entry-text">
+        <p class="rule">Means the same as "near." Always use the word "to" with "close."</p>
+        <p class="example">The bus stop is <span class="hl">close to</span> the supermarket.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Next To</span>
+      <div class="entry-text">
+        <p class="rule">Direct contact or immediate adjacency — side by side, touching.</p>
+        <p class="example">She parked her bike <span class="hl">next to</span> the front door.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GROUP 3 — HIDDEN OR FACING -->
+  <section class="group feather">
+    <div class="group-header">
+      Hidden Or Facing
+      <span class="sub">Behind · In Front Of · Between</span>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Behind</span>
+      <div class="entry-text">
+        <p class="rule">On the other side of something — hidden by it, out of view.</p>
+        <p class="example">The dog hid <span class="hl">behind</span> the sofa when it heard thunder.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">In Front Of</span>
+      <div class="entry-text">
+        <p class="rule">Directly facing something, or standing between you and it — clearly visible.</p>
+        <p class="example">He parked the car <span class="hl">in front of</span> the house.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="word-pill">Between</span>
+      <div class="entry-text">
+        <p class="rule">In the space that separates two things.</p>
+        <p class="example">Jack sat <span class="hl">between</span> his mother and his father — his mother on the left, his father on the right.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="footnote">AT, IN, and ON appear in the story but are not gap-fill targets in this game.</p>
+</div>
+</body>
+</html>
