@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Jack, Jia & Zafir's Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16232E;
+    --navy-deep:#0E1922;
+    --gold:#D4A24C;
+    --gold-bright:#E8C275;
+    --lavender:#9B7FBD;
+    --cream:#F3EDE0;
+    --cream-dim:#C9C2B2;
+    --ok:#7BA876;
+    --bad:#D9694A;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at top, #223447 0%, var(--navy) 45%, var(--navy-deep) 100%);
+    color:var(--cream);
+    font-family:'Nunito',sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:640px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* ---- Title screen ---- */
+  #title-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:32px 24px;
+    gap:18px;
+  }
+  #title-screen .genie-mark{
+    width:180px;
+    max-width:60vw;
+    height:auto;
+    filter:drop-shadow(0 0 18px rgba(212,162,76,0.45));
+  }
+  #title-screen h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,7vw,42px);
+    line-height:1.05;
+    margin:0;
+    color:var(--gold-bright);
+  }
+  #title-screen p.sub{
+    font-size:15px;
+    color:var(--cream-dim);
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    margin:0;
+  }
+  #title-screen .route{
+    font-size:22px;
+    letter-spacing:0.12em;
+    opacity:0.85;
+    margin-top:6px;
+  }
+  button.primary{
+    margin-top:14px;
+    background:linear-gradient(135deg,var(--gold) 0%, var(--gold-bright) 100%);
+    color:var(--navy-deep);
+    border:none;
+    font-family:'Nunito',sans-serif;
+    font-weight:800;
+    font-size:17px;
+    padding:14px 34px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(212,162,76,0.35);
+  }
+  button.primary:active{transform:translateY(1px);}
+
+  /* ---- Progress trail ---- */
+  #trail{
+    display:flex;
+    gap:6px;
+    padding:12px 16px;
+    overflow-x:auto;
+    background:rgba(0,0,0,0.18);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    scrollbar-width:none;
+  }
+  #trail::-webkit-scrollbar{display:none;}
+  .flag-dot{
+    flex:0 0 auto;
+    width:30px;height:30px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+    background:rgba(255,255,255,0.06);
+    border:1.5px solid rgba(255,255,255,0.12);
+    opacity:0.4;
+    transition:opacity .3s, transform .3s, box-shadow .3s;
+  }
+  .flag-dot.done{
+    opacity:1;
+    border-color:var(--gold);
+    box-shadow:0 0 10px rgba(212,162,76,0.5);
+  }
+  .flag-dot.active{
+    opacity:1;
+    transform:scale(1.15);
+    border-color:var(--gold-bright);
+  }
+
+  /* ---- Chapter view ---- */
+  #chapter-view{
+    flex:1;
+    padding:20px 20px 100px;
+  }
+  #chapter-view h2{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:22px;
+    color:var(--gold-bright);
+    margin:0 0 4px;
+  }
+  #chapter-view .ch-num{
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--lavender);
+    opacity:0.9;
+  }
+  .story-block{
+    font-size:16.5px;
+    line-height:1.65;
+    margin:14px 0;
+  }
+  .story-block em{color:var(--cream-dim);font-style:italic;}
+  .story-block strong{color:var(--gold-bright);}
+  .story-block.dialogue{color:var(--cream);}
+
+  .gap-line{
+    font-size:16.5px;
+    line-height:1.7;
+    margin:16px 0 6px;
+  }
+  .gap-blank{
+    display:inline-block;
+    min-width:110px;
+    text-align:center;
+    padding:2px 10px;
+    border-bottom:2px dashed var(--gold);
+    color:var(--gold-bright);
+    font-weight:700;
+  }
+  .gap-blank.filled{
+    border-bottom-style:solid;
+  }
+  .options{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:6px 0 18px;
+  }
+  .opt-btn{
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    padding:9px 16px;
+    border-radius:999px;
+    border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.04);
+    color:var(--cream);
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .opt-btn:hover{border-color:var(--gold);}
+  .opt-btn.correct{
+    background:rgba(123,168,118,0.22);
+    border-color:var(--ok);
+    color:#DDEBD8;
+  }
+  .opt-btn.incorrect{
+    background:rgba(217,105,74,0.22);
+    border-color:var(--bad);
+    color:#F5D9CE;
+  }
+  .opt-btn.disabled{
+    pointer-events:none;
+    opacity:0.55;
+  }
+  .opt-btn.disabled.correct, .opt-btn.disabled.incorrect{opacity:1;}
+
+  #chapter-footer{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    display:flex;justify-content:center;
+    pointer-events:none;
+  }
+  #chapter-footer-inner{
+    width:100%;max-width:640px;
+    padding:14px 20px 22px;
+    background:linear-gradient(to top, var(--navy-deep) 60%, transparent);
+    display:flex;justify-content:flex-end;
+    pointer-events:auto;
+  }
+  #continue-btn{display:none;}
+
+  /* ---- Passport stamp ---- */
+  #stamp-layer{
+    position:fixed;
+    inset:0;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+    z-index:50;
+  }
+  .stamp{
+    font-size:110px;
+    opacity:0;
+    transform:scale(2.2) rotate(-12deg);
+    filter:drop-shadow(0 0 30px rgba(212,162,76,0.6));
+  }
+  .stamp.play{
+    animation: stampIn 0.6s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+  @keyframes stampIn{
+    0%{opacity:0; transform:scale(2.6) rotate(-18deg);}
+    55%{opacity:1; transform:scale(0.92) rotate(-8deg);}
+    75%{transform:scale(1.05) rotate(-10deg);}
+    100%{opacity:0; transform:scale(1) rotate(-10deg); transition-delay:.4s;}
+  }
+
+  /* ---- Score screen ---- */
+  #score-screen{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:32px 24px;
+    gap:10px;
+  }
+  #score-screen .rank-emoji{font-size:52px;}
+  #score-screen h1{
+    font-family:'Fraunces',serif;
+    color:var(--gold-bright);
+    font-size:30px;
+    margin:6px 0 0;
+  }
+  #score-screen .scoreline{
+    font-size:17px;
+    color:var(--cream-dim);
+  }
+  #score-screen .flags-earned{
+    font-size:26px;
+    letter-spacing:2px;
+    margin:14px 0;
+  }
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="title-screen">
+    <img class="genie-mark" src="zafir.png" alt="Zafir">
+    <p class="sub">A Prepositions of Position Adventure</p>
+    <h1>Jack, Jia &amp; Zafir's Quest</h1>
+    <div class="route" id="route-preview"></div>
+    <button class="primary" id="start-btn">Begin the Quest</button>
+  </div>
+
+  <div id="game-screen" class="hidden" style="display:flex;flex-direction:column;flex:1;">
+    <div id="trail"></div>
+    <div id="chapter-view"></div>
+  </div>
+
+  <div id="chapter-footer" class="hidden">
+    <div id="chapter-footer-inner">
+      <button class="primary" id="continue-btn">Continue →</button>
+    </div>
+  </div>
+
+  <div id="stamp-layer"><div class="stamp" id="stamp-el"></div></div>
+
+  <div id="score-screen" class="hidden"></div>
+
+</div>
+
+<script>
+const GAME_DATA = [{"num": 1, "title": "THE BOTTLE 🏖️", "blocks": [{"type": "text", "text": "*A quiet beach. Late afternoon.*\n\nJack and Jia were walking along the beach when Jia suddenly stopped.\n\n\"Jack.\"\n\n\"What?\"\n\n\"Look.\"\n\nShe was pointing at a dark green bottle, half buried in the sand.\n\nJack walked over and picked it up. Something inside it was moving, and a faint light flickered."}, {"type": "gap", "num": 1, "sentence": "\"There's a light ▁▁▁▁▁▁ the glass,\" said Jack.", "options": ["behind", "above", "between"], "answer": 0}, {"type": "text", "text": "\"Open it!\"\n\n\"Are you sure?\"\n\n\"No.\"\n\nJack laughed and pulled out the cork anyway.\n\nNothing happened.\n\nThey waited.\n\nStill nothing.\n\nThen—\n\nWHOOSH!\n\nBlue smoke exploded out of the bottle and Jia jumped back.\n\nThe smoke rushed upward and began to spin. Out of it came a small, round creature with greyish-purple fur, black rounded ears, gold hoops in his ears, a little cap with a single blue feather tilted over one eye, and a richly patterned purple-and-gold robe.\n\nWhere his legs should have been, there was only a swirl of golden smoke."}, {"type": "gap", "num": 2, "sentence": "He floated ▁▁▁▁▁▁ them, arms wide, beaming down with the widest smile Jack had ever seen.", "options": ["above", "behind", "below"], "answer": 0}, {"type": "text", "text": "\"Finally!\" he shouted.\n\nJack stared.\n\nJia stared.\n\n\"Well?\"\n\n\"Well what?\" asked Jack.\n\n\"Say something!\"\n\n\"You're a genie,\" said Jia.\n\n\"Correct! My name is Zafir.\""}, {"type": "gap", "num": 3, "sentence": "He drifted down until he was floating ▁▁▁▁▁▁ the rock beside them, close enough that his robe brushed the stone.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"And you were in that bottle?\" asked Jack.\n\n\"For about a thousand years.\"\n\n\"That's a long holiday,\" said Jack.\n\nZafir's smile faded.\n\n\"Someone put me there. To get out, I need to break a spell. There are twelve magic boxes, scattered across twelve countries. Bring them together, and the spell breaks.\"\n\n\"That sounds like an adventure,\" said Jia.\n\nZafir clicked his fingers, and a beautiful carpet appeared on the sand."}, {"type": "gap", "num": 4, "sentence": "It landed ▁▁▁▁▁▁ the rock, with the rock directly beside it.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"You're joking,\" said Jack.\n\n\"Does it really fly?\"\n\n\"There's only one way to find out.\"\n\nThey climbed on, and the carpet rose into the air."}, {"type": "gap", "num": 5, "sentence": "The beach dropped farther and farther ▁▁▁▁▁▁ them.", "options": ["below", "above", "behind"], "answer": 0}, {"type": "gap", "num": 6, "sentence": "Zafir flew ahead of them. He was clearly ▁▁▁▁▁▁ the carpet, leading the way through the clouds.", "options": ["in front of", "behind", "under"], "answer": 0}, {"type": "gap", "num": 7, "sentence": "Jia sat down ▁▁▁▁▁▁ Jack, gripping his arm.", "options": ["next to", "between", "behind"], "answer": 0}, {"type": "text", "text": "\"Where are we going?\" Jack called.\n\n\"China!\"\n\n\"Why China?\"\n\n\"Because that's where our first adventure begins!\"\n\nJia looked at Jack.\n\n\"Here we go.\""}]}, {"num": 2, "title": "THE TEAHOUSE 🇨🇳", "blocks": [{"type": "text", "text": "*Beijing.*\n\nThe carpet dropped quietly into a street, and Zafir led them through a doorway into a warm little teahouse.\n\n\"Let's get something to eat,\" said Jack.\n\n\"We just ate.\"\n\n\"I'm hungry again.\""}, {"type": "gap", "num": 8, "sentence": "They found a table ▁▁▁▁▁▁ the window, with only a short space between the table and the window.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "Zafir suddenly went still.\n\n\"Wait. Did you see that?\"\n\n\"See what?\"\n\nHe pointed."}, {"type": "gap", "num": 9, "sentence": "A small yellow box was sitting ▁▁▁▁▁▁ the teapot, touching its handle.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "Jia leaned in for a closer look."}, {"type": "gap", "num": 10, "sentence": "A small key was lying ▁▁▁▁▁▁ the two teacups, wedged in the narrow gap.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Look!\"\n\nJack picked it up, fitted it into the lock, and turned it.\n\nClick.\n\nThe lid opened.\n\nInside was a small golden stone.\n\n\"Don't touch it,\" said Zafir.\n\n\"Why?\"\n\n\"It might be magical.\"\n\n\"That's not a reason.\"\n\n\"It is when I say it.\"\n\nJack reached for it anyway.\n\nThe stone leapt out of the box and shot across the room."}, {"type": "gap", "num": 11, "sentence": "It flew past them and stopped ▁▁▁▁▁▁ Jia, hovering directly between her and Jack.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Is it supposed to do that?\"\n\n\"No,\" said Zafir."}, {"type": "gap", "num": 12, "sentence": "The stone shot sideways and vanished ▁▁▁▁▁▁ a folding screen. The screen completely hid it from view.", "options": ["behind", "above", "next to"], "answer": 0}, {"type": "text", "text": "Jia hurried over.\n\n\"Where did it go?\"\n\nShe crouched."}, {"type": "gap", "num": 13, "sentence": "It had rolled ▁▁▁▁▁▁ a low table, with the tabletop directly above it.", "options": ["under", "above", "behind"], "answer": 0}, {"type": "text", "text": "She grabbed it, and it stopped glowing.\n\n\"Is that one of the boxes?\" asked Jia.\n\n\"No. A key. To what, that's the fun part.\"\n\nZafir tucked the yellow box into the pouch on his belt.\n\nOutside, red lanterns lit the street."}, {"type": "gap", "num": 14, "sentence": "They glowed ▁▁▁▁▁▁ the food stalls, with the stalls directly below them.", "options": ["above", "below", "between"], "answer": 0}, {"type": "text", "text": "\"Come on,\" said Jia. \"I want to know what that key opens.\"\n\n\"So do I,\" said Zafir."}]}, {"num": 3, "title": "A NIGHT IN SEVILLE 🇪🇸", "blocks": [{"type": "text", "text": "The carpet swept through the evening sky.\n\nSeville appeared below them, glowing with warm lights.\n\nMusic began to spill out of a small restaurant.\n\n\"That sounds good,\" said Jia.\n\n\"It smells good too,\" said Jack.\n\nA waiter showed them to a table, and a guitarist began to play."}, {"type": "gap", "num": 15, "sentence": "Zafir settled ▁▁▁▁▁▁ Jack and Jia, with Jack on one side and Jia on the other.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"This is beautiful,\" he whispered.\n\nWhen the song ended, everyone clapped.\n\nThen Zafir pointed towards the kitchen.\n\n\"That's strange.\"\n\n\"What?\""}, {"type": "gap", "num": 16, "sentence": "\"That blue box, ▁▁▁▁▁▁ the kitchen door.\"", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "Jack opened it.\n\nEmpty—except for a tiny piece of blue glass sitting inside.\n\nHe picked it up.\n\nThe restaurant lights suddenly went out.\n\n\"Did you do that?\" Jia whispered.\n\n\"No,\" said Zafir.\n\nThe lights came back.\n\nThe glass was gone."}, {"type": "gap", "num": 17, "sentence": "Jia looked down and found it ▁▁▁▁▁▁ Jack's shoe, hidden from her view by the shoe itself.", "options": ["behind", "above", "next to"], "answer": 0}, {"type": "text", "text": "Jack picked it up.\n\nIt began to glow, tracing a thin blue line across the floor and out into the street."}, {"type": "gap", "num": 18, "sentence": "They followed it until it stopped ▁▁▁▁▁▁ an old stone fountain, with the fountain only a few steps away.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "Jia crouched and reached under the rim.\n\n\"There's something here,\" she said."}, {"type": "gap", "num": 19, "sentence": "She pulled out a small blue box sitting ▁▁▁▁▁▁ the fountain's stone lip, on the side facing her.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Two,\" said Jia.\n\nZafir looked at the sky.\n\n\"Indonesia is next.\""}]}, {"num": 4, "title": "THE WOODCARVER 🇮🇩", "blocks": [{"type": "text", "text": "The carpet flew above a wide stretch of blue ocean before Bali came into view.\n\nIn a small village, a man was carving outside his house when Zafir flew down, grinning.\n\nMateo's knife stopped mid-cut. He stared for a long moment.\n\n\"The genie of the bottle,\" he said quietly. \"My grandmother told me stories about you.\"\n\nJack looked at Jia.\n\n\"He's heard of him. Not met him.\"\n\n\"Good,\" she whispered. \"That one actually makes sense.\"\n\nMateo's workshop was full of wooden animals, bowls and toys.\n\nA pile of boxes tipped over with a crash, and Jia hurried to help him stack them."}, {"type": "gap", "num": 20, "sentence": "A small green box had rolled ▁▁▁▁▁▁ two carved elephants, wedged tightly between them.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "Mateo picked it up, opened it and frowned.\n\n\"Empty.\"\n\nZafir shook his head.\n\n\"Look again.\"\n\nJia turned it over."}, {"type": "gap", "num": 21, "sentence": "A tiny picture had been tucked ▁▁▁▁▁▁ the lid, hidden by the hinge on the far side.", "options": ["behind", "above", "next to"], "answer": 0}, {"type": "text", "text": "Mateo studied it.\n\n\"Ah—that's my old carving.\"\n\n\"Where is it?\"\n\nHe pointed towards the back wall."}, {"type": "gap", "num": 22, "sentence": "\"It's ▁▁▁▁▁▁ the workbench. You can't see it from here.\"", "options": ["behind", "above", "between"], "answer": 0}, {"type": "text", "text": "They found the carving and turned it over."}, {"type": "gap", "num": 23, "sentence": "A second green box was hidden ▁▁▁▁▁▁ a loose wooden panel at the bottom of the carving.", "options": ["under", "above", "next to"], "answer": 0}, {"type": "text", "text": "\"So it was hidden inside the carving all along,\" said Jack.\n\n\"Exactly,\" said Mateo."}, {"type": "gap", "num": 24, "sentence": "Jia slid it ▁▁▁▁▁▁ the first two boxes in the bag, with the boxes touching side by side.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Thanks, Mateo.\"\n\n\"Come back one day!\""}, {"type": "gap", "num": 25, "sentence": "Outside, Mateo stood ▁▁▁▁▁▁ the workshop entrance and waved as the carpet lifted away.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Japan!\" shouted Zafir."}]}, {"num": 5, "title": "DON'T MAKE A SOUND 🇯🇵", "blocks": [{"type": "text", "text": "The carpet drifted above misty green hills before landing softly near a quiet garden."}, {"type": "gap", "num": 26, "sentence": "They paused ▁▁▁▁▁▁ a stone lantern, with only a short space between them and the lantern.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Remember,\" whispered Jia. \"We're supposed to be quiet.\"\n\nZafir nodded.\n\n\"I can be very quiet.\"\n\nCRASH!\n\nA cup lay on the floor.\n\nEveryone looked at Zafir.\n\n\"Sorry,\" he whispered.\n\nThe woman only smiled."}, {"type": "gap", "num": 27, "sentence": "She placed a red box on a small shelf ▁▁▁▁▁▁ the table, with the table directly below the shelf.", "options": ["above", "below", "between"], "answer": 0}, {"type": "gap", "num": 28, "sentence": "She held it up ▁▁▁▁▁▁ Jack, so that the box was directly between her and him.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "Jia leaned forward.\n\nZafir leaned forward too—too far.\n\nHis nose touched the table.\n\nTap.\n\n\"Sorry,\" he whispered again.\n\nThe woman laughed and pointed at the stone.\n\nIt lifted itself out of the box."}, {"type": "gap", "num": 29, "sentence": "It rose ▁▁▁▁▁▁ the box, with a clear space between the stone and the open box.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "It drifted towards the children."}, {"type": "gap", "num": 30, "sentence": "It hung ▁▁▁▁▁▁ Jack and Jia, with one child on each side.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"I think it wants you,\" said Jia.\n\nJack reached out.\n\nThe stone darted away."}, {"type": "gap", "num": 31, "sentence": "It shot across the room and vanished ▁▁▁▁▁▁ a hanging curtain.", "options": ["behind", "above", "between"], "answer": 0}, {"type": "text", "text": "They followed it into the next room."}, {"type": "gap", "num": 32, "sentence": "It was glowing softly ▁▁▁▁▁▁ a floor cushion, with the cushion directly above it.", "options": ["under", "above", "behind"], "answer": 0}, {"type": "text", "text": "Jack scooped it up."}, {"type": "gap", "num": 33, "sentence": "Zafir tucked the red box ▁▁▁▁▁▁ his belt, where the fabric completely enclosed it.", "options": ["inside", "behind", "above"], "answer": 0}, {"type": "text", "text": "They bowed to their host and slipped outside.\n\n\"How many times are you going to say sorry today?\" asked Jack.\n\n\"Probably a lot,\" said Zafir."}]}, {"num": 6, "title": "RAIN IN PARIS 🇫🇷", "blocks": [{"type": "gap", "num": 34, "sentence": "The carpet flew high above the English Channel just as the first clouds rolled in.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "\"Great,\" said Jack, as the rain started.\n\n\"You don't like rain?\"\n\n\"I like rain when I'm inside.\"\n\nThey ran for a small café."}, {"type": "gap", "num": 35, "sentence": "Clouds gathered ▁▁▁▁▁▁ the rooftops, with the rooftops far below.", "options": ["above", "below", "between"], "answer": 0}, {"type": "gap", "num": 36, "sentence": "A waiter stopped ▁▁▁▁▁▁ their table, facing them with the tray in his hands.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "He set down three cups of hot chocolate."}, {"type": "gap", "num": 37, "sentence": "He placed them ▁▁▁▁▁▁ each other in a neat row, with each cup touching the next one.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "Zafir sipped his.\n\n\"That's amazing. I've been trapped in a bottle for a thousand years. I missed a lot.\"\n\nThen Jia noticed something on the table."}, {"type": "gap", "num": 38, "sentence": "A small silver box sat ▁▁▁▁▁▁ the sugar bowl and the milk jug, with one object on each side.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "Before Jack could reach it, a gust of wind blew through the open door."}, {"type": "gap", "num": 39, "sentence": "The box skidded off the table and landed ▁▁▁▁▁▁ a chair leg, with the chair seat directly above it.", "options": ["under", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Catch it!\"\n\nJia scooped it up."}, {"type": "gap", "num": 40, "sentence": "The box was now ▁▁▁▁▁▁ her hands, completely enclosed by her fingers.", "options": ["inside", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Got it.\"\n\n\"The rain's stopped,\" said Zafir, looking through the window.\n\n\"Where now?\"\n\n\"Moscow.\"\n\n\"Does Moscow have hot chocolate?\" asked Jack.\n\n\"Probably,\" said Zafir."}]}, {"num": 7, "title": "A VERY COLD WALK 🇷🇺", "blocks": [{"type": "gap", "num": 41, "sentence": "The carpet had flown above pale winter fields for an hour before Moscow appeared, white with frost.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "\"I can't feel my fingers,\" said Jack.\n\n\"You said that in Paris.\"\n\n\"Paris was different.\"\n\nA street musician was playing near the cathedral, his case open on the ground."}, {"type": "gap", "num": 42, "sentence": "A purple box sat ▁▁▁▁▁▁ the case, tucked behind the raised lid.", "options": ["behind", "next to", "above"], "answer": 0}, {"type": "text", "text": "Jia pointed.\n\nThe musician smiled and nodded towards it.\n\nJack opened it.\n\nA small silver key lay inside.\n\nSuddenly Zafir shouted.\n\n\"Look out!\"\n\nA large dog came bounding towards them."}, {"type": "gap", "num": 43, "sentence": "It skidded to a stop ▁▁▁▁▁▁ Jack, facing him directly.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Hello,\" said Jack carefully.\n\nThe dog licked his glove and trotted off.\n\nJack looked down.\n\nHis glove was missing."}, {"type": "gap", "num": 44, "sentence": "It had fallen ▁▁▁▁▁▁ a wooden bench, with the bench seat directly above it.", "options": ["under", "above", "behind"], "answer": 0}, {"type": "text", "text": "He picked it up as they walked towards the cathedral."}, {"type": "gap", "num": 45, "sentence": "Its towers rose high ▁▁▁▁▁▁ the square, with the square far below them.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "gap", "num": 46, "sentence": "The whole cathedral stood ▁▁▁▁▁▁ them by the time they reached the steps.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Wow,\" said Jia."}, {"type": "gap", "num": 47, "sentence": "Zafir tucked the purple box ▁▁▁▁▁▁ the other boxes in his bag, with all the boxes safely enclosed inside.", "options": ["inside", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"India next,\" said Zafir."}]}, {"num": 8, "title": "BREAKFAST WITH A VIEW 🇮🇳", "blocks": [{"type": "text", "text": "The carpet landed on a rooftop in Agra just as the sun came up."}, {"type": "gap", "num": 48, "sentence": "The river Yamuna wound ▁▁▁▁▁▁ the rooftop, a distant silver thread they had to lean over the wall to see.", "options": ["below", "above", "behind"], "answer": 0}, {"type": "text", "text": "The Taj Mahal shone in the morning light."}, {"type": "gap", "num": 49, "sentence": "Jack stood ▁▁▁▁▁▁ Jia at the wall, both of them staring.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Beautiful,\" he said.\n\nA woman brought them breakfast and set down two plates with a basket of fruit."}, {"type": "gap", "num": 50, "sentence": "The basket sat ▁▁▁▁▁▁ the two plates, exactly in the middle.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "Zafir reached for three bananas.\n\n\"Three?\"\n\n\"I'm hungry.\"\n\n\"Put one back.\"\n\nHe sighed and put one back.\n\nThen Jia noticed a golden box near a low stool."}, {"type": "gap", "num": 51, "sentence": "It was sitting ▁▁▁▁▁▁ the stool, hidden from view by the stool itself.", "options": ["behind", "above", "next to"], "answer": 0}, {"type": "text", "text": "She picked it up.\n\nIt was warm.\n\nShe opened it.\n\nA tiny golden key floated out on its own."}, {"type": "gap", "num": 52, "sentence": "It drifted towards the wall and stopped ▁▁▁▁▁▁ a painting, between Jia and the painting.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Look behind the painting,\" said Zafir.\n\nJack moved it aside."}, {"type": "gap", "num": 53, "sentence": "A small hole had been carved ▁▁▁▁▁▁ the painting, hidden from the room by the painting itself.", "options": ["behind", "above", "between"], "answer": 0}, {"type": "text", "text": "Inside was a note:\n\nKEEP GOING.\n\n\"That's getting a bit repetitive,\" said Jack.\n\n\"It's good advice,\" said Zafir."}, {"type": "gap", "num": 54, "sentence": "Jia tucked the golden box ▁▁▁▁▁▁ the growing pile in the bag, with the bag completely enclosing it.", "options": ["inside", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Brazil,\" said Zafir, as the carpet rose."}]}, {"num": 9, "title": "MUSIC IN RIO 🇧🇷", "blocks": [{"type": "gap", "num": 55, "sentence": "The carpet swooped above the rainforest canopy, and the music grew louder as they dropped into Rio.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "It led them straight into a studio where a group of musicians were practising.\n\n\"Visitors! Come and join us!\"\n\nSoon everyone was clapping.\n\nZafir was dancing badly and proudly at the same time.\n\n\"You can't dance!\" laughed Jack.\n\n\"I can dance while falling. It's harder.\"\n\nA drummer pointed to an orange box."}, {"type": "gap", "num": 56, "sentence": "It was sitting ▁▁▁▁▁▁ the tall speaker, with the speaker completely blocking it from view.", "options": ["behind", "above", "next to"], "answer": 0}, {"type": "text", "text": "Jack opened it and set it on a stool.\n\nThe music started up again."}, {"type": "gap", "num": 57, "sentence": "The box sat ▁▁▁▁▁▁ Jack's feet, with the stool and box beside his shoes.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "Jia had already slipped away."}, {"type": "gap", "num": 58, "sentence": "She stood ▁▁▁▁▁▁ the drummer so she could watch every beat.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "gap", "num": 59, "sentence": "Then she waited ▁▁▁▁▁▁ the studio door when Jack finally caught up.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "Outside, a ball rolled past them and a child chased after it."}, {"type": "gap", "num": 60, "sentence": "It rolled ▁▁▁▁▁▁ the carpet, with the carpet directly beside the ball.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Nice kick!\" shouted Jack."}, {"type": "gap", "num": 61, "sentence": "He tucked the orange box ▁▁▁▁▁▁ the silver one in the bag, with the two boxes touching.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Mexico,\" said Zafir, as the music faded behind them."}]}, {"num": 10, "title": "THE PAINTED BOX 🇲🇽", "blocks": [{"type": "gap", "num": 62, "sentence": "The carpet sailed above the desert hills of Oaxaca as the sun climbed higher.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "gap", "num": 63, "sentence": "An artist stepped ▁▁▁▁▁▁ her easel so they could see the painting clearly.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Are you looking for something?\" she asked."}, {"type": "gap", "num": 64, "sentence": "She pointed to a pink box sitting ▁▁▁▁▁▁ two tall paint jars.", "options": ["between", "next to", "above"], "answer": 0}, {"type": "text", "text": "Jack moved the jars aside.\n\n\"Be careful,\" the artist warned.\n\n\"It's covered in wet paint.\"\n\nJia jumped back just in time.\n\nA paintbrush rolled off the table."}, {"type": "gap", "num": 65, "sentence": "It landed ▁▁▁▁▁▁ the workbench, out of sight beneath the wooden top.", "options": ["under", "above", "between"], "answer": 0}, {"type": "text", "text": "Jack picked it up and handed it back.\n\nThe artist opened the pink box."}, {"type": "gap", "num": 66, "sentence": "A small painted card sat ▁▁▁▁▁▁ the lid, tucked against the inside surface.", "options": ["inside", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Follow the blue bird,\" Jia read aloud."}, {"type": "gap", "num": 67, "sentence": "There was a bird painted ▁▁▁▁▁▁ the doorway, its wings brushing the top of the frame.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "Jack checked behind the painting.\n\nNothing.\n\nJia looked closer."}, {"type": "gap", "num": 68, "sentence": "A second, tiny bird was painted ▁▁▁▁▁▁ the big one, with the larger bird directly above it.", "options": ["below", "above", "next to"], "answer": 0}, {"type": "text", "text": "\"That's the clue!\""}, {"type": "gap", "num": 69, "sentence": "Jack looked ▁▁▁▁▁▁ the painting itself and found nothing there.", "options": ["behind", "above", "below"], "answer": 0}, {"type": "text", "text": "The artist laughed.\n\n\"You found it anyway.\"\n\n\"We're getting good at this,\" said Jack.\n\nShe gave Jia a small painted card for the road.\n\nOutside, Zafir was waiting.\n\n\"Egypt.\"\n\n\"How many more?\" asked Jack.\n\n\"Don't worry about that,\" said Zafir, which was exactly when Jack started worrying about it."}]}, {"num": 11, "title": "THE DESERT AT SUNSET 🇪🇬", "blocks": [{"type": "text", "text": "They stopped on a quiet rooftop as the sun dropped low."}, {"type": "gap", "num": 70, "sentence": "The desert stretched far ▁▁▁▁▁▁ them, with the rooftop high above the sand.", "options": ["below", "above", "behind"], "answer": 0}, {"type": "gap", "num": 71, "sentence": "Jack sat down ▁▁▁▁▁▁ Jia on the rooftop wall.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "For a while, nobody spoke.\n\n\"I think this is my favourite place,\" said Jia.\n\n\"Mine too,\" said Jack.\n\n\"Mine as well,\" said Zafir quietly.\n\n\"What's your favourite?\" asked Jack.\n\nZafir thought about it.\n\n\"Home.\"\n\n\"Where's home?\"\n\nHe didn't answer.\n\nInstead, he pointed to a heavy bronze box."}, {"type": "gap", "num": 72, "sentence": "It was resting ▁▁▁▁▁▁ a low stone table, with the table directly beneath it.", "options": ["on top of", "below", "behind"], "answer": 0}, {"type": "text", "text": "Jack and Jia lifted it together.\n\nJack opened the lid.\n\nInside was a small golden stone."}, {"type": "gap", "num": 73, "sentence": "It rose slowly ▁▁▁▁▁▁ the box, with a clear space between the stone and the box.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "Zafir went very quiet.\n\n\"What is it?\" asked Jia.\n\n\"My past.\""}, {"type": "gap", "num": 74, "sentence": "The stone floated closer and stopped directly ▁▁▁▁▁▁ his face, between Zafir and Jia.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "Zafir closed his eyes.\n\nThe stone dropped."}, {"type": "gap", "num": 75, "sentence": "It landed ▁▁▁▁▁▁ an old brass lamp on the table, touching its base.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Are you okay?\" asked Jia.\n\n\"Ask me tomorrow,\" said Zafir, and smiled."}, {"type": "gap", "num": 76, "sentence": "Jack tucked the bronze box ▁▁▁▁▁▁ the others in the bag, with the bag enclosing it completely.", "options": ["inside", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Turkey,\" said Zafir."}]}, {"num": 12, "title": "LOST IN THE BAZAAR 🇹🇷", "blocks": [{"type": "text", "text": "*Istanbul. The Grand Bazaar. Crowded and loud.*"}, {"type": "gap", "num": 77, "sentence": "The carpet flew above the Bosphorus, with the ships far below them.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "\"Stay together,\" said Jia.\n\n\"I am together.\"\n\n\"With us.\"\n\nZafir vanished into the crowd.\n\n\"Zafir!\"\n\nNothing.\n\nThen his little cap appeared, floating higher than everyone around him."}, {"type": "gap", "num": 78, "sentence": "His cap was clearly ▁▁▁▁▁▁ the crowd.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "\"Over here!\"\n\n\"Don't disappear like that!\"\n\n\"Sorry. I found a shop.\"\n\nInside, a merchant pointed to a turquoise box."}, {"type": "gap", "num": 79, "sentence": "It was sitting ▁▁▁▁▁▁ two folded carpets, squeezed tightly between them.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "Jia opened it.\n\nA small blue stone sat inside, glowing next to an old brass lamp on the counter."}, {"type": "gap", "num": 80, "sentence": "She held it ▁▁▁▁▁▁ the lamp, with the two objects touching.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "Suddenly a cat leapt onto the counter and knocked a cup flying."}, {"type": "gap", "num": 81, "sentence": "It smashed on the floor, ▁▁▁▁▁▁ the counter, with the counter directly above it.", "options": ["below", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Sorry!\" said Jack.\n\n\"Don't worry,\" laughed the merchant.\n\n\"The cat does that every day.\""}, {"type": "gap", "num": 82, "sentence": "Jack grabbed the box and placed it ▁▁▁▁▁▁ the other boxes in his bag, with the bag completely surrounding it.", "options": ["inside", "behind", "above"], "answer": 0}, {"type": "text", "text": "Outside, Zafir was waiting."}, {"type": "gap", "num": 83, "sentence": "He stood ▁▁▁▁▁▁ the shop doorway, facing Jack and Jia.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Ready?\"\n\n\"Senegal,\" said Zafir."}]}, {"num": 13, "title": "THE FISHERMAN 🇸🇳", "blocks": [{"type": "text", "text": "*A small fishing village. The last country.*\n\nThe final journey took them across the sea to a small fishing village, where a fisherman was mending his nets.\n\nHe looked at Zafir and went very still.\n\n\"You're real,\" he murmured. \"My father always said the boxes were guarding something. He never said what.\"\n\n\"You know who I am?\" asked Zafir.\n\n\"I know the story,\" said the fisherman. \"Not the same thing.\"\n\nHe led them into his small wooden shed.\n\nNets were strung across the doorway."}, {"type": "gap", "num": 84, "sentence": "They hung ▁▁▁▁▁▁ the entrance, so high that nobody had to duck to pass beneath them.", "options": ["above", "below", "between"], "answer": 0}, {"type": "text", "text": "The fisherman opened a cupboard and pulled out a white box, dusty from years untouched."}, {"type": "gap", "num": 85, "sentence": "It had been sitting ▁▁▁▁▁▁ a stack of crates, with the crates completely blocking it from view.", "options": ["behind", "above", "next to"], "answer": 0}, {"type": "text", "text": "He handed it to Jia.\n\nShe opened it.\n\nThe final stone began to glow, brighter than any before."}, {"type": "gap", "num": 86, "sentence": "It rose ▁▁▁▁▁▁ her open hands, leaving a clear space between her hands and the stone.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "Then it shot towards Zafir."}, {"type": "gap", "num": 87, "sentence": "It stopped directly ▁▁▁▁▁▁ him, spinning slowly between Zafir and Jia.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"This is it,\" said Zafir.\n\n\"Then you are free,\" said the fisherman.\n\n\"Not yet.\"\n\nJack looked at him.\n\n\"What else is there?\"\n\n\"The boxes have to be together.\"\n\nJack, Jia and Zafir carried the boxes outside.\n\nThey laid them out on the sand."}, {"type": "gap", "num": 88, "sentence": "They stood ▁▁▁▁▁▁ each other in a long, glowing row, with each box touching the next one.", "options": ["next to", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Twelve boxes,\" said Jack.\n\n\"Twelve countries,\" said Jia.\n\n\"Twelve journeys,\" said Zafir.\n\nNobody spoke for a moment.\n\nThen the fisherman smiled.\n\n\"Go home.\"\n\nThey climbed onto the carpet.\n\nIt rose into the evening sky.\n\nThe fisherman waved from the shore."}, {"type": "gap", "num": 89, "sentence": "The village grew smaller and sank ▁▁▁▁▁▁ them.", "options": ["below", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"After all that, I really want to know what's inside them,\" said Jack.\n\n\"You'll find out soon,\" said Zafir."}]}, {"num": 14, "title": "THE SECRET 🌅", "blocks": [{"type": "text", "text": "*The same beach. Almost dark.*\n\nThe carpet brought them back to the beach, the same rock, the same sea, the same place where Jack had first found the bottle.\n\n\"We're home,\" said Jia.\n\n\"Not quite,\" said Zafir.\n\n\"Remember where you found me?\"\n\nThey walked over.\n\nZafir set the boxes down one by one on the sand."}, {"type": "gap", "num": 90, "sentence": "Jack placed the first box ▁▁▁▁▁▁ the second, with their sides touching.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "gap", "num": 91, "sentence": "Jia set the third ▁▁▁▁▁▁ the first two, filling the empty space between them.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "\"Twelve boxes,\" said Jack."}, {"type": "gap", "num": 92, "sentence": "Zafir knelt down ▁▁▁▁▁▁ the boxes, facing them directly.", "options": ["in front of", "behind", "above"], "answer": 0}, {"type": "text", "text": "Nothing happened.\n\nJack waited.\n\nJia waited.\n\nA wave rolled gently onto the sand.\n\n\"Maybe we did something wrong,\" said Jack.\n\n\"No,\" said Zafir, opening his eyes.\n\n\"The boxes aren't the important part. They brought us here—but that's not what breaks the spell.\"\n\n\"Then what does?\"\n\nZafir pointed at the sky.\n\nThe twelve boxes began to glow."}, {"type": "gap", "num": 93, "sentence": "Golden light rose ▁▁▁▁▁▁ them, leaving the boxes on the sand below.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "text", "text": "Words began to appear inside the golden light.\n\nChinese. Spanish. Indonesian. Japanese. French. Russian. Hindi. Portuguese. Arabic. Turkish. Wolof. English.\n\nTwelve languages.\n\nThe words drifted together into a long golden line, forming the shape of a song.\n\nBut it was missing pieces."}, {"type": "gap", "num": 94, "sentence": "Empty spaces glowed ▁▁▁▁▁▁ the words, with words on both sides of each space.", "options": ["between", "above", "behind"], "answer": 0}, {"type": "text", "text": "Zafir laughed.\n\n\"Ah. Now I understand.\"\n\nThe floating words drifted down towards Jack and Jia.\n\nSome settled in a soft ring around their heads, glowing like a crown of light."}, {"type": "gap", "num": 95, "sentence": "One small word landed ▁▁▁▁▁▁ Jack's feet, touching the sand beside his shoe.", "options": ["next to", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"These are the missing words,\" said Zafir.\n\n\"Only you can put them back.\"\n\nThe final puzzle appeared.\n\nJack and Jia began filling the gaps.\n\nOne. Two. Three.\n\nThe golden line grew brighter.\n\nMore words appeared."}, {"type": "gap", "num": 96, "sentence": "Some floated ▁▁▁▁▁▁ Jack and Jia, high in the air.", "options": ["above", "below", "behind"], "answer": 0}, {"type": "gap", "num": 97, "sentence": "Others appeared ▁▁▁▁▁▁ Jack and Jia, with Jack on one side and Jia on the other.", "options": ["between", "behind", "above"], "answer": 0}, {"type": "text", "text": "They kept going.\n\nThe words moved faster.\n\nJia laughed.\n\n\"Jack, this is getting difficult!\"\n\n\"Keep going!\"\n\nThey filled another gap.\n\nThen another.\n\nThe golden light grew brighter.\n\nZafir watched them.\n\n\"I think you're nearly there.\"\n\n\"Nearly?\"\n\n\"Very nearly.\"\n\nJack looked at Jia.\n\n\"Ready?\"\n\n\"Ready.\"\n\nThey filled the final gap.\n\nEverything stopped.\n\nFor one second, there was complete silence.\n\nThen—\n\nWHOOM!\n\nGolden light exploded across the beach.\n\nThe twelve boxes opened.\n\nNot with gold. Not with treasure. With words.\n\nThousands of words.\n\nThey flew into the air."}, {"type": "gap", "num": 98, "sentence": "Zafir rose ▁▁▁▁▁▁ the sand, his feet leaving the ground.", "options": ["above", "under", "behind"], "answer": 0}, {"type": "text", "text": "The words formed sentences.\n\nThe sentences formed a song.\n\nAnd the song filled the beach.\n\nZafir laughed.\n\nThen he began to sing.\n\nHis voice moved through twelve languages.\n\nJack and Jia danced in the sand.\n\nWhen the song ended, everything became quiet again.\n\nThe twelve boxes sat empty on the beach.\n\nZafir floated gently back down.\n\nHe looked at Jack and Jia.\n\n\"Thank you.\"\n\n\"You're free?\" asked Jia.\n\n\"I'm free.\"\n\n\"Where will you go?\"\n\nZafir thought about it.\n\n\"Home.\"\n\n\"Where's home?\"\n\n\"Wherever my friends are.\"\n\nJack groaned.\n\n\"That's very cheesy.\"\n\n\"I've been trapped in a bottle for a thousand years. I'm allowed one cheesy line.\"\n\nThey laughed.\n\nThe three friends climbed onto the magic carpet.\n\nThe moon was rising over the water.\n\nThey lifted into the night."}, {"type": "gap", "num": 99, "sentence": "Jack looked down as the beach grew smaller ▁▁▁▁▁▁ them.", "options": ["below", "above", "behind"], "answer": 0}, {"type": "text", "text": "\"Wait.\"\n\n\"What?\"\n\n\"Same time next year?\"\n\nJia smiled.\n\n\"Same time next—\"\n\nShe stopped.\n\nThe sand beneath the carpet's shadow had begun to glow.\n\nA golden light pulsed in a perfect circle far below.\n\n\"Zafir—what's that?\"\n\nBefore he could answer, the circle opened.\n\nJack dropped straight through it.\n\n\"JACK!\"\n\nThe circle closed.\n\nJust sand, stars and the sound of the sea.\n\nZafir's smile was gone.\n\n\"That was a portal.\"\n\n\"Where did it take him?\"\n\nZafir looked at the place where Jack had disappeared.\n\n\"Through time.\"\n\nJia grabbed his arm.\n\n\"Can we get him back?\"\n\nZafir nodded.\n\n\"We have to.\"\n\nA second golden circle began to open.\n\nJia climbed onto the carpet.\n\nZafir took the controls.\n\n\"Ready?\"\n\nShe did not hesitate.\n\n\"Let's go.\"\n\nThe carpet shot towards the portal."}, {"type": "gap", "num": 100, "sentence": "One last golden word drifted ▁▁▁▁▁▁ the empty boxes on the sand below, before it too faded into the dark.", "options": ["above", "behind", "below"], "answer": 0}, {"type": "text", "text": "And just before they disappeared into the golden light, Jia looked back at the beach.\n\nTwelve empty boxes sat quietly in the sand.\n\nThe portal opened wider.\n\nZafir pushed the carpet forward.\n\nAnd they vanished into the light.\n\n**TO BE CONTINUED IN GAME 3:\nJACK, JIA & ZAFIR — LOST IN TIME**"}]}];
+</script>
+<script>
+(function(){
+  const COUNTRY_ORDER = GAME_DATA.map(ch => {
+    const m = ch.title.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})+$/u);
+    return m ? m[0].trim() : '📍';
+  });
+
+  document.getElementById('route-preview').textContent = COUNTRY_ORDER.join(' ');
+
+  let chapterIndex = 0;
+  let score = 0;
+  let totalGaps = GAME_DATA.reduce((s,ch)=>s+ch.blocks.filter(b=>b.type==='gap').length,0);
+  let chapterGapsRemaining = 0;
+
+  function mdInline(text){
+    return text
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>');
+  }
+
+  function renderTrail(){
+    const trail = document.getElementById('trail');
+    trail.innerHTML = '';
+    COUNTRY_ORDER.forEach((flag,i)=>{
+      const d = document.createElement('div');
+      d.className = 'flag-dot' + (i < chapterIndex ? ' done' : '') + (i === chapterIndex ? ' active' : '');
+      d.textContent = flag;
+      trail.appendChild(d);
+    });
+  }
+
+  function shuffledOptions(gap){
+    const idxs = [0,1,2];
+    for(let i=idxs.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [idxs[i],idxs[j]]=[idxs[j],idxs[i]];
+    }
+    return idxs.map(i => ({text: gap.options[i], isCorrect: i === gap.answer}));
+  }
+
+  function renderChapter(){
+    const ch = GAME_DATA[chapterIndex];
+    const view = document.getElementById('chapter-view');
+    view.innerHTML = '';
+    renderTrail();
+
+    const h = document.createElement('div');
+    h.innerHTML = `<div class="ch-num">Chapter ${ch.num} of ${GAME_DATA.length}</div><h2>${mdInline(ch.title)}</h2>`;
+    view.appendChild(h);
+
+    chapterGapsRemaining = ch.blocks.filter(b=>b.type==='gap').length;
+    document.getElementById('continue-btn').style.display = 'none';
+
+    ch.blocks.forEach(block=>{
+      if(block.type === 'text'){
+        const paras = block.text.split(/\n\n+/).filter(p=>p.trim().length);
+        paras.forEach(p=>{
+          const el = document.createElement('div');
+          el.className = 'story-block' + (p.trim().startsWith('"') ? ' dialogue' : '');
+          el.innerHTML = mdInline(p.trim());
+          view.appendChild(el);
+        });
+      } else if(block.type === 'gap'){
+        const wrap = document.createElement('div');
+        wrap.className = 'gap-line';
+        wrap.innerHTML = mdInline(block.sentence || '');
+        view.appendChild(wrap);
+
+        const opts = shuffledOptions(block);
+        const optWrap = document.createElement('div');
+        optWrap.className = 'options';
+        opts.forEach(o=>{
+          const btn = document.createElement('button');
+          btn.className = 'opt-btn';
+          btn.textContent = o.text;
+          btn.addEventListener('click', ()=>{
+            if(btn.classList.contains('disabled')) return;
+            const siblings = optWrap.querySelectorAll('.opt-btn');
+            siblings.forEach(s=>s.classList.add('disabled'));
+            if(o.isCorrect){
+              btn.classList.add('correct');
+              score++;
+            } else {
+              btn.classList.add('incorrect');
+              siblings.forEach(s=>{
+                if(s.textContent === block.options[block.answer]) s.classList.add('correct');
+              });
+            }
+            chapterGapsRemaining--;
+            if(chapterGapsRemaining <= 0){
+              showStamp(COUNTRY_ORDER[chapterIndex]);
+              document.getElementById('continue-btn').style.display = 'inline-block';
+            }
+          });
+          optWrap.appendChild(btn);
+        });
+        view.appendChild(optWrap);
+      }
+    });
+  }
+
+  function showStamp(flag){
+    const el = document.getElementById('stamp-el');
+    el.textContent = flag;
+    el.classList.remove('play');
+    void el.offsetWidth;
+    el.classList.add('play');
+  }
+
+  function nextChapter(){
+    if(chapterIndex < GAME_DATA.length - 1){
+      chapterIndex++;
+      renderChapter();
+      document.getElementById('chapter-view').scrollIntoView({behavior:'smooth'});
+    } else {
+      showScore();
+    }
+  }
+
+  function gradeFor(pct100){
+    if(pct100 === 100) return {emoji:'👑', label:'Perfect Quest!'};
+    if(pct100 >= 90) return {emoji:'🔥', label:'Incredible!'};
+    if(pct100 >= 78) return {emoji:'🎯', label:'Outstanding!'};
+    if(pct100 >= 62) return {emoji:'⭐', label:'Great Explorer!'};
+    if(pct100 >= 48) return {emoji:'👍', label:'Good Quest!'};
+    return {emoji:'🌱', label:'Keep Searching!'};
+  }
+
+  function showScore(){
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('chapter-footer').classList.add('hidden');
+    const scaled = Math.round((score/totalGaps)*100);
+    const g = gradeFor(scaled);
+    const s = document.getElementById('score-screen');
+    s.classList.remove('hidden');
+    s.innerHTML = `
+      <div class="rank-emoji">${g.emoji}</div>
+      <h1>${g.label}</h1>
+      <div class="scoreline">You scored ${score} out of ${totalGaps}</div>
+      <div class="flags-earned">${COUNTRY_ORDER.join(' ')}</div>
+      <button class="primary" id="replay-btn">Play Again</button>
+    `;
+    document.getElementById('replay-btn').addEventListener('click', ()=>{
+      chapterIndex = 0; score = 0;
+      s.classList.add('hidden');
+      document.getElementById('title-screen').classList.remove('hidden');
+    });
+  }
+
+  document.getElementById('start-btn').addEventListener('click', ()=>{
+    document.getElementById('title-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('game-screen').style.display = 'flex';
+    document.getElementById('chapter-footer').classList.remove('hidden');
+    renderChapter();
+  });
+
+  document.getElementById('continue-btn').addEventListener('click', nextChapter);
+})();
+</script>
+</body>
+</html>
