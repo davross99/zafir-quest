@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jack, Jia &amp; Zafir's Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { width:100%; height:100%; overflow:hidden; background:#000; position:fixed; }
+body { font-family:"Nunito",sans-serif; user-select:none; }
+.screen { display:none; position:fixed; inset:0; flex-direction:column; align-items:center; justify-content:center; }
+.screen.active { display:flex; }
+#title-screen { background:linear-gradient(rgba(20,0,30,0.6),rgba(20,0,30,0.65)),url("title.png") center/cover no-repeat; gap:0.9rem; padding:2rem 1.5rem; text-align:center; }
+@keyframes pulse-glow {
+  0% { text-shadow: 0 0 10px #B266FF, 0 0 30px #7A29CC, 3px 3px 0 #2a0d4d, 6px 6px 0 rgba(0,0,0,0.4); }
+  100% { text-shadow: 0 0 20px #D9A6FF, 0 0 50px #9933FF, 0 0 80px rgba(153,51,255,0.4), 3px 3px 0 #2a0d4d, 6px 6px 0 rgba(0,0,0,0.4); }
+}
+@keyframes flicker {
+  0% { filter: drop-shadow(0 0 15px rgba(153,51,255,0.9)) drop-shadow(4px 4px 0 rgba(50,0,80,0.9)) drop-shadow(8px 8px 0 rgba(0,0,0,0.5)); }
+  50% { filter: drop-shadow(0 0 25px rgba(200,80,255,1)) drop-shadow(4px 4px 0 rgba(50,0,80,0.9)) drop-shadow(8px 8px 0 rgba(0,0,0,0.5)); }
+  100% { filter: drop-shadow(0 0 35px rgba(255,215,0,0.9)) drop-shadow(4px 4px 0 rgba(50,0,80,0.9)) drop-shadow(8px 8px 0 rgba(0,0,0,0.5)); }
+}
+.tt { font-family:"Bangers",cursive; font-size:clamp(2rem,8vw,3.5rem); color:#FFD700; text-shadow:3px 3px 0 #3a1a5a; letter-spacing:2px; line-height:1.1; }
+.tt-sub { color:#f0e0ff; font-size:clamp(0.82rem,3vw,1rem); text-align:center; max-width:280px; line-height:1.5; background:rgba(0,0,0,0.55); padding:0.4rem 0.8rem; border-radius:8px; }
+.ts { font-family:"Bangers",cursive; font-size:clamp(0.85rem,3vw,1.2rem); color:#D9A6FF; letter-spacing:4px; }
+.hint { color:#ddd; font-size:clamp(0.8rem,2.8vw,1rem); max-width:300px; line-height:1.6; background:rgba(0,0,0,0.65); padding:0.5rem 0.8rem; border-radius:8px; }
+.btn-gold { background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a00; font-family:"Bangers",cursive; font-size:clamp(1.1rem,4vw,1.7rem); letter-spacing:2px; border:none; padding:0.7rem 2.5rem; border-radius:40px; cursor:pointer; box-shadow:0 5px 0 #8B6914; }
+.btn-gold:active { transform:translateY(4px); box-shadow:0 1px 0 #8B6914; }
+.btn-sm { font-family:"Bangers",cursive; font-size:clamp(0.85rem,3vw,1.1rem); letter-spacing:2px; border-radius:40px; padding:0.4rem 1.2rem; cursor:pointer; border:2px solid; }
+.bg { background:rgba(90,0,140,0.55); color:#D9A6FF; border-color:#D9A6FF; }
+.bb { background:rgba(0,0,120,0.7); color:#aaaaff; border-color:#aaaaff; }
+#game-screen { background:#000; }
+#bg { position:fixed; inset:0; z-index:0; background-size:auto 70%; background-position:center 22%; background-repeat:no-repeat; background-color:#140a1e; transition:background-image 1.2s ease; }
+#bg::after { content:""; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,0.18) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 52%,rgba(0,0,0,0.6) 75%,rgba(0,0,0,0.92) 90%,rgba(0,0,0,0.97) 100%); }
+#hud { position:fixed; top:0; left:0; right:0; z-index:40; display:flex; align-items:center; justify-content:space-between; gap:0.3rem; padding:0.32rem 0.6rem; background:rgba(0,0,0,0.85); border-bottom:2px solid rgba(217,166,255,0.45); }
+.ht { font-family:"Bangers",cursive; color:#D9A6FF; font-size:clamp(0.72rem,2.6vw,0.95rem); letter-spacing:1px; white-space:nowrap; }
+.hs { font-family:"Bangers",cursive; color:#90ee90; font-size:clamp(0.78rem,2.8vw,1rem); white-space:nowrap; }
+.bh { font-family:"Bangers",cursive; font-size:clamp(0.85rem,3.2vw,1.1rem); border:none; border-radius:12px; padding:0.35rem 0.9rem; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.br { background:rgba(180,0,0,0.92); color:#fff; }
+.bgg { background:rgba(90,0,140,0.85); color:#D9A6FF; }
+.bbl { background:rgba(0,0,160,0.85); color:#aaaaff; }
+#prog { position:fixed; top:var(--hud-h,44px); left:0; right:0; z-index:40; height:4px; background:rgba(255,255,255,0.1); }
+#pf { height:100%; background:linear-gradient(90deg,#D9A6FF,#FFD700); width:0%; transition:width 0.4s; }
+#slbl { position:fixed; top:calc(var(--hud-h,44px) + 4px); left:0; right:0; z-index:40; text-align:center; padding:0.22rem 0; font-family:"Bangers",cursive; font-size:clamp(0.78rem,3.2vw,1.05rem); color:#FFD700; letter-spacing:1px; background:rgba(0,0,0,0.65); }
+#bottomPanel { position:fixed; left:0; right:0; bottom:0; z-index:41; display:flex; flex-direction:column; }
+#chests { position:relative; display:flex; align-items:flex-end; justify-content:space-around; padding:0 0.8rem 0.35rem; gap:0.4rem; }
+.chest { display:flex; flex-direction:column; align-items:center; width:clamp(54px,19vw,82px); cursor:pointer; touch-action:manipulation; position:relative; }
+.chest:active { transform:scale(0.93); }
+.cx-glow { width:70%; height:clamp(8px,2.4vw,13px); background:radial-gradient(ellipse at center,rgba(217,166,255,0.85) 0%,rgba(153,51,255,0.45) 55%,transparent 100%); filter:blur(3px); margin-bottom:-4px; pointer-events:none; }
+.cx-img { width:88%; height:auto; display:block; filter:drop-shadow(0 6px 10px rgba(0,0,0,0.75)); }
+.cw { font-family:"Bangers",cursive; font-size:clamp(0.6rem,2.6vw,0.85rem); letter-spacing:1px; font-weight:900; color:#FFD700; text-shadow:2px 2px 0 rgba(0,0,0,1),0 0 10px rgba(0,0,0,0.88); margin-top:2px; position:relative; z-index:10; pointer-events:none; text-align:center; line-height:1.05; white-space:nowrap; }
+#sp { position:relative; background:rgba(4,2,0,0.94); border-top:3px solid #9933FF; padding:0.5rem 1rem 0.65rem; display:flex; align-items:center; justify-content:center; max-height:24vh; overflow-y:auto; }
+#st { transition:opacity 0.35s ease; }
+#st.fade { opacity:0; }
+#st { font-family:"Nunito",sans-serif; font-size:clamp(0.85rem,3.6vw,1.15rem); font-weight:800; color:#f5e8c0; text-shadow:1px 1px 2px rgba(0,0,0,0.9); text-align:center; line-height:1.5; width:100%; white-space:normal; word-break:normal; overflow-wrap:break-word; }
+.gap { display:inline; font-family:"Bangers",cursive; font-size:clamp(0.85rem,3.6vw,1.15rem); font-weight:900; letter-spacing:2px; color:#FFD700; border-bottom:3px dotted #FFD700; padding:0 6px; cursor:pointer; white-space:nowrap; }
+.gap.correct { color:#80ff80; border-bottom:3px solid #50c850; cursor:default; }
+.gap.wrong { color:#ff5555; border-bottom:3px solid #e63232; animation:shk 0.4s ease; }
+@keyframes shk { 0%,100%{padding-left:6px} 25%{padding-left:12px} 75%{padding-left:2px} }
+#chart-screen { background:linear-gradient(rgba(20,0,35,0.9),rgba(15,0,25,0.94)),url("ch1.jpg") center/cover no-repeat; justify-content:flex-start; overflow:hidden; }
+#chi { width:100%; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 0 1rem 0; }
+.chud { position:sticky; top:0; z-index:10; background:rgba(0,0,0,0.9); border-bottom:2px solid #FFD700; padding:0.4rem 0.8rem; display:flex; align-items:center; justify-content:space-between; }
+.chtit { font-family:"Bangers",cursive; color:#FFD700; font-size:clamp(0.9rem,3.5vw,1.3rem); letter-spacing:2px; }
+.cbk { font-family:"Bangers",cursive; font-size:clamp(0.7rem,2.5vw,1rem); background:rgba(180,0,0,0.85); color:#fff; border:none; border-radius:8px; padding:0.2rem 0.6rem; cursor:pointer; }
+.cjk { text-align:center; font-size:clamp(2rem,8vw,3.5rem); padding:0.5rem 0 0.2rem; animation:bnc 2s ease-in-out infinite; }
+@keyframes bnc { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.cmt { font-family:"Bangers",cursive; text-align:center; font-size:clamp(1.3rem,5.5vw,2rem); color:#FFD700; text-shadow:2px 2px 0 #3a1a5a; letter-spacing:2px; }
+.csu { font-family:"Bangers",cursive; text-align:center; font-size:clamp(0.75rem,2.8vw,1rem); color:#D9A6FF; letter-spacing:2px; padding-bottom:0.7rem; }
+.cs { margin:0 0.7rem 0.6rem; border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(0,0,0,0.5); }
+.csh { display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.8rem; font-family:"Bangers",cursive; font-size:clamp(0.8rem,3vw,1.05rem); letter-spacing:1px; background:#B98CE0; color:#1a0030; }
+.cbge { font-family:"Bangers",cursive; font-size:clamp(0.75rem,3vw,1.05rem); width:clamp(30px,9vw,44px); height:clamp(28px,8vw,40px); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#6A2FA0; color:#fff; text-align:center; line-height:1; padding:0.1rem; }
+.csb { background:rgba(0,0,0,0.55); padding:0.4rem 0.8rem 0.45rem; }
+.ce { font-family:"Nunito",sans-serif; font-size:clamp(0.7rem,2.6vw,0.92rem); color:#f5e8c0; font-weight:700; padding:0.18rem 0; border-bottom:1px solid rgba(217,166,255,0.12); }
+.ce:last-child { border-bottom:none; }
+.ce em { font-style:normal; color:#FFD700; font-weight:900; }
+.slb { font-family:"Bangers",cursive; font-size:clamp(0.82rem,3vw,1.05rem); letter-spacing:3px; color:#FFD700; text-align:center; padding:0.28rem 0; background:rgba(0,0,0,0.45); margin:0.2rem 0.7rem 0.5rem; border-radius:6px; }
+#inst-screen { background:linear-gradient(rgba(20,0,35,0.92),rgba(10,0,20,0.95)),url("ch5.jpg") center/cover no-repeat; justify-content:flex-start; overflow:hidden; }
+#iin { width:100%; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 0 2rem 0; }
+.ihud { position:sticky; top:0; z-index:10; background:rgba(0,0,0,0.92); border-bottom:2px solid #FFD700; padding:0.4rem 0.8rem; display:flex; align-items:center; justify-content:space-between; }
+.ihudt { font-family:"Bangers",cursive; color:#FFD700; font-size:clamp(0.9rem,3.5vw,1.3rem); letter-spacing:2px; }
+.ibk { font-family:"Bangers",cursive; font-size:clamp(0.7rem,2.5vw,1rem); background:rgba(180,0,0,0.85); color:#fff; border:none; border-radius:8px; padding:0.2rem 0.6rem; cursor:pointer; }
+.it { font-family:"Bangers",cursive; font-size:clamp(1.1rem,5vw,1.6rem); color:#FFD700; text-shadow:2px 2px 0 #3a1a5a; letter-spacing:2px; text-align:center; padding:0.6rem 0 0.6rem; }
+.isc { background:rgba(0,0,0,0.5); border:1px solid rgba(217,166,255,0.2); border-radius:8px; padding:0.6rem 0.8rem; margin:0 0.8rem 0.6rem; }
+.isct { font-family:"Bangers",cursive; color:#FFD700; font-size:clamp(0.8rem,3vw,1.05rem); letter-spacing:2px; margin-bottom:0.4rem; }
+.ist { color:#f5e8c0; font-size:clamp(0.75rem,2.8vw,0.95rem); font-weight:700; line-height:1.8; padding-left:1.2rem; }
+.ipr { color:#f5e8c0; font-size:clamp(0.72rem,2.6vw,0.92rem); font-weight:700; line-height:1.8; padding-left:1.2rem; }
+.itp { background:rgba(217,166,255,0.1); border:1px solid rgba(217,166,255,0.3); border-radius:6px; padding:0.32rem 0.6rem; margin:0 0.8rem 0.5rem; font-size:clamp(0.72rem,2.6vw,0.92rem); color:#f5e8c0; font-weight:700; text-align:center; }
+.itp span { color:#FFD700; }
+.iok { color:#90ee90; }
+.ibd { color:#ff8888; }
+#wo { position:fixed; inset:0; z-index:200; background:rgba(130,0,0,0.48); display:none; align-items:center; justify-content:center; flex-direction:column; gap:0.5rem; }
+#wo.show { display:flex; animation:wfl 0.3s ease; }
+@keyframes wfl { 0%{background:rgba(220,0,0,0.75)} 100%{background:rgba(130,0,0,0.48)} }
+.wm { font-family:"Bangers",cursive; font-size:clamp(2.2rem,9vw,4.2rem); color:#ff5555; letter-spacing:4px; text-shadow:0 0 22px rgba(255,0,0,0.82); }
+.ws { color:#ffcccc; font-size:clamp(0.9rem,3vw,1.1rem); font-weight:700; }
+#fwc { position:fixed; inset:0; z-index:150; pointer-events:none; display:none; }
+#end-screen { background:linear-gradient(rgba(20,0,30,0.62),rgba(20,0,30,0.62)),url("ch14.jpg") center/cover no-repeat; gap:1rem; text-align:center; padding:2rem 1.5rem; }
+.etr { font-size:clamp(3rem,10vw,5rem); animation:bnc 2s ease-in-out infinite; }
+.eti { font-family:"Bangers",cursive; font-size:clamp(2rem,8vw,3.8rem); color:#FFD700; text-shadow:3px 3px 0 #3a1a5a; letter-spacing:3px; }
+.esc { font-family:"Bangers",cursive; font-size:clamp(1.3rem,5vw,2.4rem); color:#90ff90; }
+.emg { color:#ddd; font-size:clamp(0.85rem,2.8vw,1rem); max-width:340px; line-height:1.6; background:rgba(0,0,0,0.58); padding:0.5rem 0.8rem; border-radius:8px; }
+#inst-overlay { display:none; position:fixed; inset:0; z-index:600; align-items:center; justify-content:center; pointer-events:none; flex-direction:column; gap:1rem; }
+#inst-overlay.show { display:flex; opacity:1; }
+#inst-overlay.fade { opacity:0; }
+#inst-msg { font-family:'Bangers',cursive; font-size:clamp(1.15rem,4.6vw,1.55rem); letter-spacing:2px; color:#FFD700; text-shadow:0 0 20px rgba(255,215,0,0.8),2px 2px 4px rgba(0,0,0,0.9); text-align:center; padding:0.8rem 1.4rem; background:rgba(4,2,0,0.85); border:2px solid #9933FF; border-radius:14px; max-width:320px; opacity:0; transition:opacity 0.6s ease; }
+#inst-msg.visible { opacity:1; }
+#luck-msg { font-family:'Bangers',cursive; font-size:clamp(1.5rem,6vw,2rem); letter-spacing:4px; color:#D9A6FF; text-shadow:0 0 20px rgba(153,51,255,0.8),2px 2px 4px rgba(0,0,0,0.9); text-align:center; padding:0.6rem 1.4rem; background:rgba(4,2,0,0.85); border:2px solid #9933FF; border-radius:14px; opacity:0; transition:opacity 0.6s ease; display:none; }
+#luck-msg.visible { opacity:1; }
+#chart-intro-msg { display:none; position:fixed; inset:0; z-index:490; align-items:center; justify-content:center; pointer-events:none; opacity:0; filter:blur(12px); transition:opacity 1.2s ease, filter 1.4s ease; }
+#chart-intro-msg.visible { opacity:1; filter:blur(0px); }
+#chart-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:500; background:linear-gradient(rgba(20,0,35,0.97),rgba(10,0,20,0.99)); overflow-y:auto; -webkit-overflow-scrolling:touch; box-shadow:0 -8px 40px rgba(0,0,0,0.9); pointer-events:none; clip-path: inset(100% 0 0 0); transition: clip-path 2.8s cubic-bezier(0.25,0.46,0.45,0.94); }
+#chart-overlay.unrolling { clip-path: inset(0% 0 0 0); pointer-events:all; }
+</style>
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div class="screen active" id="title-screen">
+  <div class="tt" style="line-height:1.1;letter-spacing:2px;">
+    <span style="display:block;font-size:clamp(1.5rem,6vw,2.4rem);color:#FFE566;text-shadow:0 0 10px #B266FF,0 0 30px #7A29CC,3px 3px 0 #2a0d4d,6px 6px 0 rgba(0,0,0,0.4);animation:pulse-glow 2s ease-in-out infinite alternate;">&#x1FA94; JACK, JIA &amp;</span>
+    <span style="display:block;font-size:clamp(2.1rem,9vw,3.6rem);background:linear-gradient(180deg,#FFD700 0%,#E0B0FF 45%,#9933FF 80%,#7A29CC 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 15px rgba(153,51,255,0.9)) drop-shadow(4px 4px 0 rgba(50,0,80,0.9)) drop-shadow(8px 8px 0 rgba(0,0,0,0.5));animation:flicker 3s ease-in-out infinite alternate;">ZAFIR'S<br>QUEST</span>
+  </div>
+  <div class="ts" style="color:#90ee90;text-shadow:0 0 12px rgba(0,255,0,0.4),1px 1px 0 #004400;">&#x1F30D; A PREPOSITIONS ADVENTURE &#x1F30D;</div>
+  <button class="btn-gold" onclick="startWithChart()">&#x25B6; START ADVENTURE</button>
+  <div id="continue-btn" style="display:none;">
+    <button class="btn-gold" style="background:linear-gradient(135deg,#50c850,#208020);" onclick="continueGame()">&#x25B6; CONTINUE GAME</button>
+  </div>
+  <button class="btn-sm bg" onclick="openChart(0)">GRAMMAR CHART</button>
+  <button class="btn-sm bb" onclick="openInst(0)">HOW TO PLAY</button>
+</div>
+<div class="screen" id="game-screen">
+  <div id="bg"></div>
+  <div id="hud">
+    <span class="ht">JACK, JIA &amp; ZAFIR</span>
+    <span class="hs">&#x2705;<span id="sv">0</span>/<span id="tv">0</span> <span style="color:rgba(255,215,0,0.5);font-size:0.8em;">GO FOR 100</span></span>
+    <button class="bh bgg" onclick="openChart(1)">CHART</button>
+    <button class="bh bbl" onclick="openInst(1)">HELP</button>
+    <button class="bh br" onclick="restartGame()">RESTART</button>
+  </div>
+  <div id="prog"><div id="pf"></div></div>
+  <div id="slbl">CHAPTER 1</div>
+  <div id="bottomPanel">
+    <div id="chests"></div>
+    <div id="sp"><div id="st"></div></div>
+  </div>
+</div>
+<div class="screen" id="chart-screen">
+  <div id="chi">
+    <div class="chud"><div class="chtit">GRAMMAR CHART</div><button class="cbk" onclick="closeChart()">BACK</button></div>
+    <div class="cjk">&#x1FA94;</div>
+    <div class="cmt">11 PREPOSITIONS OF POSITION</div>
+    <div class="csu">WHERE IS IT?</div>
+    <div class="slb">OPEN GAPS (space between)</div>
+    <div class="cs"><div class="csh"><div class="cbge">ABOVE</div><div>Higher, with a gap</div></div><div class="csb"><div class="ce">The lamp is <em>above</em> the table.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">BELOW</div><div>Lower, with a gap</div></div><div class="csb"><div class="ce">The river flows <em>below</em> the bridge.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">UNDER</div><div>Directly beneath, touching</div></div><div class="csb"><div class="ce">The cat is <em>under</em> the bed.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">ON TOP OF</div><div>Higher, resting/stacked</div></div><div class="csb"><div class="ce">The box is <em>on top of</em> the shelf.</div></div></div>
+    <div class="slb">HIDDEN / VISIBLE</div>
+    <div class="cs"><div class="csh"><div class="cbge">BEHIND</div><div>Hidden by something</div></div><div class="csb"><div class="ce">The key is <em>behind</em> the door.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">IN FRONT OF</div><div>Facing / directly visible</div></div><div class="csb"><div class="ce">Jack stood <em>in front of</em> the mirror.</div></div></div>
+    <div class="slb">DISTANCE</div>
+    <div class="cs"><div class="csh"><div class="cbge">NEXT TO</div><div>Touching, side by side</div></div><div class="csb"><div class="ce">The cup is <em>next to</em> the plate.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">CLOSE TO</div><div>Very near, almost touching</div></div><div class="csb"><div class="ce">She stood <em>close to</em> the window.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">NEAR</div><div>A short distance away</div></div><div class="csb"><div class="ce">The school is <em>near</em> the park.</div></div></div>
+    <div class="slb">SPANNING / BETWEEN</div>
+    <div class="cs"><div class="csh"><div class="cbge">OVER</div><div>Across, high above</div></div><div class="csb"><div class="ce">The bridge goes <em>over</em> the river.</div></div></div>
+    <div class="cs"><div class="csh"><div class="cbge">BETWEEN</div><div>In the space separating two things</div></div><div class="csb"><div class="ce">The box is <em>between</em> the two vases.</div></div></div>
+  </div>
+</div>
+<div class="screen" id="inst-screen">
+  <div id="iin">
+    <div class="ihud"><div class="ihudt">HOW TO PLAY</div><button class="ibk" onclick="closeInst()">BACK</button></div>
+    <div class="it">How to play</div>
+    <div class="isc"><div class="isct">&#x1F4CB; Instructions</div><ol class="ist"><li>Read the full sentence on the screen.</li><li>Find the gap <strong style="color:#FFD700">___</strong> in the sentence.</li><li>Tap the correct box: three choices appear each time.</li><li>The correct preposition will lock into place.</li></ol></div>
+    <div class="isc"><div class="isct">&#x1F3AF; The prepositions</div><ul class="ipr"><li>Eleven prepositions of position &#x2014; see the <strong>Grammar Chart</strong> for full examples and rules.</li></ul></div>
+    <div class="itp"><span class="iok">&#x2705; Correct: fireworks! Next sentence.</span></div>
+    <div class="itp"><span class="ibd">&#x274C; Wrong: screen flashes red. Try again!</span></div>
+    <div class="itp">Tap <span>CHART</span> to see the grammar chart.</div>
+  </div>
+</div>
+<div class="screen" id="end-screen" style="overflow-y:auto;-webkit-overflow-scrolling:touch;justify-content:flex-start;padding:1rem 1rem 2rem;">
+  <div style="text-align:center;width:100%;">
+    <div class="etr" id="end-emoji">&#x1F3C6;</div>
+    <div class="eti" id="end-grade">QUEST COMPLETE!</div>
+    <div class="esc" id="end-score"></div>
+  </div>
+  <div id="grade-ladder" style="width:100%;margin-bottom:1rem;"></div>
+  <button class="btn-gold" onclick="restartGame()">&#x1F504; PLAY AGAIN</button>
+</div>
+<div class="screen" id="paywall-screen" style="background:linear-gradient(rgba(20,0,30,0.75),rgba(20,0,30,0.75)),url('ch5.jpg') center/cover no-repeat; gap:1.2rem; text-align:center; padding:2rem 1.5rem;">
+  <div class="eti" style="font-size:clamp(1.6rem,7vw,2.6rem);">Enjoyed the sample?</div>
+  <div class="tt-sub" style="max-width:320px;">To continue the adventure, buy now.</div>
+  <button class="btn-gold" onclick="buyFullGame()">BUY NOW &#x2022; $0.50</button>
+</div>
+<canvas id="fwc"></canvas>
+<div id="wo"><div class="wm">WRONG!</div><div class="ws">Try again!</div></div>
+<div id="chart-intro-msg">
+  <div style="background:rgba(20,0,30,0.92);border:2px solid rgba(217,166,255,0.8);border-radius:20px;padding:1.8rem 2rem;max-width:320px;text-align:center;margin:0 1.5rem;box-shadow:0 0 40px rgba(0,0,0,0.8);">
+    <div style="font-family:'Bangers',cursive;color:#FFD700;font-size:clamp(1.2rem,5vw,1.6rem);letter-spacing:2px;margin-bottom:0.8rem;text-shadow:0 0 15px rgba(217,166,255,0.6);">&#x1F4DA; A LITTLE HELP...</div>
+    <div style="color:#f5e8c0;font-family:'Nunito',sans-serif;font-size:clamp(0.88rem,3.2vw,1.05rem);font-weight:700;line-height:1.8;">Here is some help if you need it before your quest with Zafir begins!</div>
+    <div style="margin-top:0.8rem;color:rgba(217,166,255,0.7);font-family:'Bangers',cursive;font-size:clamp(0.75rem,2.8vw,0.95rem);letter-spacing:1px;">The grammar chart will appear shortly...</div>
+  </div>
+</div>
+<div id="chart-overlay">
+  <div style="padding:0.5rem 1rem 0.4rem;background:rgba(0,0,0,0.85);border-bottom:2px solid rgba(217,166,255,0.4);text-align:center;position:sticky;top:0;z-index:10;">
+    <div style="font-family:'Bangers',cursive;color:#FFD700;font-size:clamp(0.9rem,3.5vw,1.2rem);letter-spacing:3px;">&#x1F4CB; GRAMMAR CHART &nbsp;&#x2022;&nbsp; Scroll to study &nbsp;&#x2022;&nbsp; &#x1F4CB;</div>
+  </div>
+  <div id="chart-top-btn" style="display:none;padding:1rem;text-align:center;background:rgba(0,0,0,0.5);border-bottom:1px solid rgba(217,166,255,0.2);">
+    <button onclick="launchQuest()" style="font-family:'Bangers',cursive;font-size:clamp(1.2rem,5vw,1.8rem);letter-spacing:3px;background:linear-gradient(135deg,#FFD700,#D9A6FF,#9933FF);color:#1a0030;border:none;padding:0.8rem 2rem;border-radius:40px;cursor:pointer;box-shadow:0 6px 0 #4a1a7a,0 0 30px rgba(153,51,255,0.6);width:100%;max-width:380px;">&#x26A1; START YOUR QUEST &#x26A1;</button>
+  </div>
+  <div id="chart-overlay-inner" style="padding-bottom:1rem;"></div>
+  <div style="padding:1rem;text-align:center;background:rgba(0,0,0,0.5);">
+    <button id="quest-btn" onclick="launchQuest()" style="font-family:'Bangers',cursive;font-size:clamp(1.2rem,5vw,1.8rem);letter-spacing:3px;background:linear-gradient(135deg,#FFD700,#D9A6FF,#9933FF);color:#1a0030;border:none;padding:0.8rem 2rem;border-radius:40px;cursor:pointer;box-shadow:0 6px 0 #4a1a7a,0 0 30px rgba(153,51,255,0.6);width:100%;max-width:380px;">&#x26A1; START YOUR QUEST &#x26A1;</button>
+    <div style="font-family:'Bangers',cursive;color:rgba(217,166,255,0.6);font-size:clamp(0.7rem,2.5vw,0.9rem);letter-spacing:2px;margin-top:0.5rem;">&#x2195; SCROLL TO STUDY THE CHART &#x2195;</div>
+  </div>
+</div>
+<div id="inst-overlay">
+  <div id="inst-msg">Tap the box with the correct preposition to fill the gap.</div>
+  <div id="luck-msg">Good luck! &#x1F340;</div>
+</div>
+<script>
+var SS = [["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "A quiet beach. Late afternoon. Jack and Jia were walking along the beach when Jia suddenly stopped. \"Jack.\" \"What?\" \"Look.\" She was pointing at a dark green bottle, half buried in the sand. Jack walked over and picked it up. Something inside it was moving, and a faint light flickered. There's a light [behind] the glass,\" said Jack.", ["behind", "above", "below"], "behind"], ["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "\"Open it!\" \"Are you sure?\" \"No.\" Jack laughed and pulled out the cork anyway. Nothing happened. They waited. Still nothing. Then — WHOOSH! Blue smoke exploded out of the bottle, and Jia jumped back. The smoke rushed upward and began to spin. Out of it came a small, round creature with grayish-purple fur, black rounded ears, gold hoops in his ears, a little cap with a single blue feather tilted over one eye, and a richly patterned purple-and-gold robe. Where his legs should have been, there was only a swirl of golden smoke. He floated [above] them, arms wide, beaming down with the widest smile Jack had ever seen.", ["above", "behind", "below"], "above"], ["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "\"Finally!\" he shouted. Jack stared. Jia stared. \"Well?\" \"Well what?\" asked Jack. \"Say something!\" \"You're a genie,\" said Jia. \"Correct! My name is Zafir.\" He drifted down until he was floating [close to] the rock beside them, close enough that his robe brushed the stone.", ["close to", "near", "above"], "close to"], ["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "\"And you were in that bottle?\" asked Jack. \"For about a thousand years.\" \"That's a long holiday,\" said Jack. Zafir's smile faded. \"Someone put me there. To get out, I need to break a spell.\" \"How?\" \"There are twelve magic boxes, scattered across twelve countries. Bring them together, and the spell breaks.\" Jack looked at Jia. Jia looked at the genie. \"That sounds like an adventure,\" she said. Zafir clicked his fingers. A beautiful carpet appeared on the sand. It landed [near] the rock, just a few steps from the waves.", ["near", "close to", "above"], "near"], ["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "\"You're joking,\" said Jack. \"Does it really fly?\" \"There's only one way to find out.\" They climbed on. The carpet rose into the air. The beach dropped farther and farther [below] them.", ["below", "above", "behind"], "below"], ["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "Zafir flew ahead, sweeping [over] them and leading the way through the clouds.", ["over", "behind", "below"], "over"], ["ch1.jpg", "CHAPTER 1 — THE BOTTLE 🏖️", "Jia sat down [next to] Jack, gripping his arm. \"Where are we going?\" Jack called. \"China!\" \"Why China?\" \"Because that's where our first adventure begins!\" Jia looked at Jack. \"Here we go.\"", ["next to", "near", "behind"], "next to"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "Beijing. A small teahouse. The carpet dropped quietly into a busy Beijing street. For a moment, nobody moved. Then a bicycle bell rang, a man shouted something from a food stall, and a little dog ran straight between Jack's feet. \"Welcome to China,\" said Zafir. \"Did you arrange that?\" \"The dog?\" \"The whole thing.\" Zafir looked offended. \"Of course not.\" They laughed and followed the smell of tea into a small teahouse. Inside, the noise of the street disappeared. They found a table [near] the window, where they could watch people hurrying past outside.", ["near", "close to", "above"], "near"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "Jack picked up the menu. \"I can't read any of this.\" \"That's because it's Chinese,\" said Jia. \"I knew that.\" Zafir suddenly went still. \"Wait.\" \"What?\" \"Did you see that?\" He pointed. A small yellow box was sitting [next to] the teapot, touching its handle.", ["next to", "above", "behind"], "next to"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "Jia leaned in for a closer look. She leaned [close to] the teapot, so close her nose almost touched the lid.", ["close to", "near", "above"], "close to"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "\"Jack, move your cup.\" Nothing. \"Your plate.\" Nothing. Jia frowned. \"Wait. Don't move anything.\" She studied the table instead of reaching for the box. Then she froze. \"Look!\" A small key was lying [between] the two teacups, wedged in the narrow gap.", ["between", "next to", "above"], "between"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "Jack picked it up, fitted it into the lock, and turned it. Click. The lid opened. Inside was a small golden stone. \"Don't touch it,\" said Zafir. \"Why?\" \"It might be magical.\" \"That's not a reason.\" \"It is when I say it.\" Jack reached for it anyway. The stone leapt out of the box and shot across the room. It flew past them and stopped [in front of] Jia, hovering right in her face.", ["in front of", "next to", "above"], "in front of"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "\"Is it supposed to do that?\" \"No,\" said Zafir. The stone shot sideways and vanished [behind] a folding screen in the corner.", ["behind", "above", "next to"], "behind"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "Jia hurried over and looked around the screen. Nothing. Then she crouched. It had rolled [under] a low table, glowing faintly in the shadow.", ["under", "below", "next to"], "under"], ["ch2.jpg", "CHAPTER 2 — THE TEAHOUSE 🇨🇳", "She grabbed it, and it stopped glowing. \"Is that one of the boxes?\" asked Jia. \"No. A key.\" \"To what?\" Zafir smiled. \"That's the fun part.\" Outside, red lanterns lit the street. They glowed [above] the food stalls, painting the whole street red. Jia tucked the little key safely into her pocket. \"Come on.\" \"Where?\" \"I want to know what it opens.\" Zafir grinned. \"So do I.\"", ["above", "below", "between"], "above"], ["ch3.jpg", "CHAPTER 3 — A NIGHT IN SEVILLE 🇪🇸", "Seville. A small restaurant. Evening. The carpet swept [over] the mountains of southern Europe before dipping down toward Seville.", ["over", "above", "below"], "over"], ["ch3.jpg", "CHAPTER 3 — A NIGHT IN SEVILLE 🇪🇸", "Music drifted out of a small restaurant. \"That sounds good,\" said Jia. \"It smells good too,\" said Jack. They went inside. A waiter showed them to a table, and a guitarist began to play. Zafir settled [between] Jack and Jia, listening with his eyes closed.", ["between", "above", "next to"], "between"], ["ch3.jpg", "CHAPTER 3 — A NIGHT IN SEVILLE 🇪🇸", "For once, Zafir said nothing. He simply listened. When the song ended, everyone clapped. Then Zafir pointed toward the kitchen. \"That's strange.\" \"What?\" \"That blue box, [next to] the kitchen door.\"", ["next to", "above", "behind"], "next to"], ["ch3.jpg", "CHAPTER 3 — A NIGHT IN SEVILLE 🇪🇸", "Jack opened it. Empty — except for a tiny piece of blue glass sitting inside. He picked it up. The restaurant lights suddenly went out. \"Did you do that?\" Jia whispered. \"No,\" said Zafir. The lights came back. The glass was gone. Jia looked down. She found it [behind] Jack's shoe.", ["behind", "above", "next to"], "behind"], ["ch3.jpg", "CHAPTER 3 — A NIGHT IN SEVILLE 🇪🇸", "Jack picked it up. It began to glow, tracing a thin blue line across the floor and out into the street. They followed it. The line led them through two narrow streets and stopped [near] an old stone fountain.", ["near", "above", "between"], "near"], ["ch3.jpg", "CHAPTER 3 — A NIGHT IN SEVILLE 🇪🇸", "Jia crouched beside the fountain. She reached toward the stone rim. \"There!\" A small blue box was resting [on top of] the fountain's stone lip, just above the water. Jack smiled. \"Well, that's one way to find a box.\" Jia picked it up. \"Two.\" Zafir looked toward the street. \"Come on.\" \"Where?\" \"Somewhere warmer.\" The carpet appeared behind them. \"Indonesia,\" said Zafir. And before Jack could ask why, the carpet shot into the night.", ["on top of", "behind", "below"], "on top of"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "Bali. A small village workshop. The carpet flew [over] a wide stretch of blue ocean before Bali came into view.", ["over", "above", "below"], "over"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "In Bali, a man named Riko was carving a wooden bird outside his house. He looked up. His face lit up. \"Zafir!\" \"Riko!\" Jack blinked. \"You know him too?\" Riko laughed. \"Everyone knows Zafir.\" \"I don't like the sound of that,\" said Jack. They followed Riko into his workshop. There were wooden animals everywhere — birds, elephants, fish, monkeys, and one very serious-looking wooden chicken. Jia picked it up. \"What's this?\" \"Chicken,\" said Riko. \"I can see that.\" \"It doesn't lay eggs.\" \"That's probably why it's made of wood.\" A pile of small carvings tipped over with a crash. Jack stepped forward, but Jia was already kneeling beside the pile. \"Wait. Don't move them yet.\" She carefully studied the fallen carvings. A small green box had rolled [between] two carved elephants, wedged tight.", ["between", "next to", "above"], "between"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "Riko pulled it free. \"Empty.\" Zafir shook his head. \"Look again.\" Jia turned it over. A tiny picture had been tucked [behind] the lid, hidden behind the hinge.", ["behind", "above", "below"], "behind"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "Riko stared at the picture. \"Ah.\" \"What?\" asked Jack. \"My old carving.\" He pointed to the back of the workshop. It was [behind] the workbench, gathering dust.", ["behind", "above", "below"], "behind"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "They found it. Jia turned the carving over. \"There's a loose panel.\" She pressed it. A second green box was hidden [below] a loose panel at the bottom of the carving.", ["below", "above", "next to"], "below"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "\"That's clever,\" said Jack. Jia smiled. \"I was going to say the same thing.\" Riko handed the box to her. She slid it [next to] the other boxes in the bag.", ["next to", "above", "between"], "next to"], ["ch4.jpg", "CHAPTER 4 — THE WOODCARVER 🇮🇩", "Outside, the afternoon sun was beginning to turn orange. Riko stood [in front of] the workshop and waved as the carpet lifted away. \"Japan!\" shouted Zafir. \"Do you know someone there too?\" Jack asked. Zafir smiled. \"Probably.\"", ["in front of", "behind", "above"], "in front of"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "Kyoto. A traditional home. The carpet drifted [over] misty green hills before landing softly near a quiet garden.", ["over", "above", "below"], "over"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "They walked through the garden. Nobody spoke for a while. Then Jack stepped on a dry leaf. CRACK. All three froze. A bird looked down at them. Jack whispered, \"Sorry.\" Jia pointed at him. \"You weren't supposed to say anything.\" \"Right.\" They paused [near] a stone lantern to catch their breath.", ["near", "close to", "above"], "near"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "A woman welcomed them into the house. She served tea. Zafir sat very carefully. For almost ten seconds, everything was perfectly quiet. Then— CRASH. He had knocked over a cup. \"Sorry,\" he whispered. The woman laughed. She placed a red box on a small shelf [above] the table and lifted it down carefully.", ["above", "below", "between"], "above"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "She held it up [in front of] Jack and opened the lid.", ["in front of", "behind", "above"], "in front of"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "Inside was a small red stone. Jia leaned forward. The stone lifted itself out of the box. It rose [above] the box, spinning slowly in the lamplight.", ["above", "below", "between"], "above"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "It drifted toward the children. It hung [between] Jack and Jia, as if deciding which one to choose.", ["between", "next to", "above"], "between"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "\"I think it wants you,\" said Jia. Jack reached out. The stone darted away. It shot across the room and vanished [behind] a hanging curtain.", ["behind", "above", "between"], "behind"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "They followed it into the next room. The stone was glowing softly [below] a low wooden shelf.", ["below", "above", "behind"], "below"], ["ch5.jpg", "CHAPTER 5 — DON'T MAKE A SOUND 🇯🇵", "Jack crouched and picked it up. It went warm in his hand. Zafir tucked the red box [under] his belt, securing it beneath the belt strap. The woman bowed. The three of them bowed back. Outside, Jack looked at Zafir. \"How many times are you going to say sorry today?\" Zafir thought about it. \"Probably a lot.\" Jack laughed. \"At least you're honest.\"", ["under", "close to", "behind"], "under"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "Paris. A rainy afternoon. The carpet crossed [over] the English Channel just as the first clouds rolled in.", ["over", "above", "below"], "over"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "\"Great,\" said Jack as the rain started. \"I like rain,\" said Zafir. \"Really?\" \"When I'm indoors.\" Jia laughed. \"Then you're about to have a very French experience.\" She spotted a café ahead. \"This way.\" They hurried through the streets. Rain had turned the pavement into a mirror. The three of them stopped for a moment, watching the city shimmer. Then another enormous drop landed on Jack's nose. \"Right,\" he said. \"Café.\" They ran for the café. Clouds gathered [above] the rooftops, and the first drops began to fall harder.", ["above", "below", "between"], "above"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "A waiter stopped [in front of] their table, tray balanced on one hand.", ["in front of", "behind", "above"], "in front of"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "He set down three cups of hot chocolate. \"Now this,\" said Jack, \"is a good idea.\" The waiter placed the cups [next to] each other in a neat row.", ["next to", "above", "between"], "next to"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "Zafir took one sip. His eyes widened. \"I have missed a great deal.\" Jia laughed. Then she noticed something unusual. A small silver box was balanced [on top of] the sugar bowl.", ["on top of", "behind", "below"], "on top of"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "Before Jack could reach it, a gust of wind blew through the open door. The box skidded across the table, bounced once, and landed [near] a chair leg.", ["near", "above", "between"], "near"], ["ch6.jpg", "CHAPTER 6 — RAIN IN PARIS 🇫🇷", "\"Catch it!\" Jia scooped it up. She held it [close to] her chest as she sat back down. The rain finally began to fade. Jia looked out of the window. Paris had turned silver. \"I think Paris is better in the rain.\" Jack looked at her. \"You just said that like you've done this before.\" \"Maybe I have.\" Zafir smiled. \"Where now?\" \"Moscow.\" Jack looked at his hot chocolate. \"Can we take this?\" \"No.\" \"Shame.\"", ["close to", "near", "above"], "close to"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "Moscow. Red Square. Bitterly cold. The carpet had flown [over] pale winter fields for an hour before Moscow appeared, white with frost.", ["over", "above", "below"], "over"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "Jack stepped onto the ground. \"I can't feel my fingers.\" \"You said that in Paris,\" said Jia. \"Paris was different.\" A street musician was playing near the cathedral. His case was open on the ground. A purple box sat [on top of] the case, resting high on its flat lid.", ["on top of", "next to", "behind"], "on top of"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "The musician saw them looking. He smiled and nodded toward the box. Jack opened it. Inside was a small silver key. Suddenly Zafir shouted. \"Look out!\" A large dog came bounding toward them. Jack stepped back. The dog skidded to a stop [in front of] him and wagged its tail.", ["in front of", "behind", "above"], "in front of"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "\"Hello,\" said Jack carefully. The dog licked his glove and trotted away. Jack looked down. His glove was missing. It had fallen [under] a wooden bench nearby.", ["under", "above", "between"], "under"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "He picked it up. They walked toward the cathedral. Its towers rose high [above] the square, bright as a fairy tale.", ["above", "below", "between"], "above"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "The whole cathedral stood [in front of] them by the time they reached the steps.", ["in front of", "behind", "above"], "in front of"], ["ch7.jpg", "CHAPTER 7 — A VERY COLD WALK 🇷🇺", "Jia stopped. \"Wow.\" Zafir did not joke. He simply looked up at the towers. For a moment, all three stood quietly. Then Jack pulled his glove back on. \"Much better.\" Zafir tucked the purple box [close to] the other boxes in the bag, keeping it secure. Jack looked at the growing bag. \"That's getting heavy.\" Zafir nodded. \"So are we.\"", ["close to", "near", "next to"], "close to"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "Agra. A rooftop at sunrise. The carpet landed on a rooftop in Agra just as the sun came up. The river Yamuna wound [below] the fort in the distance, catching the first light.", ["below", "above", "between"], "below"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "The Taj Mahal shone in the morning light. Jack stood [next to] Jia at the wall, both of them staring.", ["next to", "near", "above"], "next to"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "\"Beautiful,\" he said. Jia nodded. For once, Jack had nothing else to add. A woman brought them breakfast. There were warm flatbreads, fruit, tea, and more food than Jack thought three people could possibly eat. The basket of fruit sat [between] the two plates, exactly in the middle.", ["between", "next to", "above"], "between"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "Zafir reached for three bananas. \"Three?\" \"I'm hungry.\" \"Put one back,\" said Jia. He sighed and put one back. Then Jia noticed a golden box. She did not point immediately. Instead, she studied the strange angle of the morning light. \"It's there.\" \"Where?\" asked Jack. Jia crouched. The box was tucked [behind] the low stool, almost hidden from view.", ["behind", "above", "next to"], "behind"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "She pulled it out. The box was warm. When she opened it, a tiny golden key floated into the air. It drifted toward the wall and stopped [below] a painting.", ["below", "behind", "above"], "below"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "\"Look behind the painting,\" said Zafir. Jack moved it aside. A small hole had been carved [behind] the painting, into the wall itself.", ["behind", "above", "between"], "behind"], ["ch8.jpg", "CHAPTER 8 — BREAKFAST WITH A VIEW 🇮🇳", "Inside was a note. KEEP GOING. Jack stared at it. \"That's getting a bit repetitive.\" \"It's good advice,\" said Zafir. Jia smiled. \"At least it's clear.\" She tucked the golden box [near] the growing pile in the bag. Jack looked back at the Taj Mahal. \"I think I could stay here.\" Jia smiled. \"Me too.\" Zafir shook his head. \"Then you would miss Brazil.\" Jack sighed. \"Fine.\"", ["near", "above", "next to"], "near"], ["ch9.jpg", "CHAPTER 9 — MUSIC IN RIO 🇧🇷", "Rio de Janeiro. A small music studio. The carpet swooped [over] the rainforest canopy, and the music grew louder as they dropped into Rio.", ["over", "above", "below"], "over"], ["ch9.jpg", "CHAPTER 9 — MUSIC IN RIO 🇧🇷", "It led them straight into a studio where a group of musicians were practising. \"Visitors!\" called one of the musicians. \"Come and join us!\" Jack grinned. Jia clapped along. Zafir listened carefully. A drummer pointed toward an orange box. It was resting [on top of] a tall speaker, high above the floor.", ["on top of", "behind", "below"], "on top of"], ["ch9.jpg", "CHAPTER 9 — MUSIC IN RIO 🇧🇷", "Jack reached for it. The musicians kept playing. The box began to buzz gently with the beat. Jia noticed something. \"Wait.\" She pointed to a loose cable. \"It's vibrating.\" The drummer looked. \"You're right.\" He unplugged it. The buzzing stopped. \"Good catch,\" said Jack. Jia grinned. \"I have my uses.\" Jack placed the box beside his feet. It sat [near] Jack as he watched the musicians.", ["near", "above", "between"], "near"], ["ch9.jpg", "CHAPTER 9 — MUSIC IN RIO 🇧🇷", "Jia moved closer to the drummer to watch his hands. She stayed [close to] him, trying to copy the rhythm.", ["close to", "near", "next to"], "close to"], ["ch9.jpg", "CHAPTER 9 — MUSIC IN RIO 🇧🇷", "The drummer slowed the rhythm so she could follow. Jia caught it. Then she added a little variation of her own. The drummer laughed. \"Now you've got it!\" When the song ended, everyone cheered. Jia laughed. \"That was brilliant.\" Zafir bowed. \"I accept payment in bananas.\" \"Absolutely not,\" said Jack. Outside, Jia was waiting [in front of] the studio door when Jack finally caught up.", ["in front of", "behind", "above"], "in front of"], ["ch9.jpg", "CHAPTER 9 — MUSIC IN RIO 🇧🇷", "A ball rolled past them. A child chased after it. The child caught it, hugged it, and ran back toward the music. Jack smiled. \"Everywhere we go, something happens.\" Zafir nodded. \"That's because you keep looking.\" Jack tucked the orange box [next to] the silver one in the bag. \"Mexico,\" said Zafir. The music faded behind them as the carpet rose.", ["next to", "above", "between"], "next to"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "Oaxaca. A colourful painter's workshop. The carpet sailed [over] the desert hills of Oaxaca as the sun climbed higher.", ["over", "above", "below"], "over"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "The workshop was full of bright colours. Red. Yellow. Blue. Green. Paintings covered almost every wall. An artist stepped [in front of] her easel to show them a large painting.", ["in front of", "behind", "above"], "in front of"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "\"Do you like it?\" Jia stared at the painting. \"It's beautiful.\" Jack pointed at a tiny blue bird in the corner. \"What's that?\" \"The clue.\" \"The clue to what?\" The artist smiled. She pointed toward a pink box sitting [between] two tall paint jars.", ["between", "next to", "above"], "between"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "Jack moved the jars aside. \"Be careful,\" the artist warned. \"It's covered in wet paint.\" Jia jumped back just in time. A paintbrush rolled off the workbench. It landed [under] the workbench, out of sight.", ["under", "above", "between"], "under"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "Jack reached down and picked it up. \"Got it.\" The artist opened the pink box. A small painted card sat [close to] the lid, tucked snugly against it.", ["close to", "near", "above"], "close to"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "\"Follow the blue bird,\" Jia read aloud. There was a bird painted [above] the doorway, wings spread wide.", ["above", "below", "between"], "above"], ["ch10.jpg", "CHAPTER 10 — THE PAINTED BOX 🇲🇽", "Jack looked around. A second, tiny bird was painted [below] the big one, almost too small to see. Jia stepped back. \"Don't look at the big bird.\" Jack turned. \"What?\" \"The little one.\" She pointed. \"The two birds aren't just decoration. They're showing us where to look.\" Jack laughed. \"You're getting very good at this.\" Jia smiled. \"Someone has to.\" Jack looked ___________ the painting itself. Nothing. Then he laughed. \"Maybe we're getting too good at this.\" The artist laughed too. She gave Jia a small painted card for the road. Outside, Zafir was waiting. \"Egypt.\" Jack looked back at the workshop. \"I liked Mexico.\" \"So did Jia,\" said Zafir. Jia looked at the painted card in her hand. \"I think I'll keep this.\" Zafir smiled. \"Good.\"", ["below", "above", "next to"], "below"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "Giza. A rooftop at sunset. They stopped on a quiet rooftop as the sun dropped low. The desert stretched away far [below] them.", ["below", "above", "between"], "below"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "Nobody spoke for a while. Jack sat down [next to] Jia on the rooftop wall.", ["next to", "near", "above"], "next to"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "\"I think this is my favourite place,\" said Jia. \"Mine too,\" said Jack. Zafir smiled. \"Mine as well.\" Jack looked at him. \"Really?\" Zafir nodded. Then he looked out across the desert. \"Some memories are better when you stop running from them.\" Jack and Jia exchanged a glance. Neither of them made a joke. After a moment, Zafir pointed toward the edge of the rooftop. A small stack of folded rugs sat beside a low stone table. The heavy bronze box was resting [on top of] the stack.", ["on top of", "near", "below"], "on top of"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "Jack and Jia lifted it together. Inside was a small golden stone. It rose slowly [above] the box, glowing brighter with every second.", ["above", "below", "between"], "above"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "Zafir went very quiet. \"What is it?\" asked Jia. \"My past.\" The stone floated closer and stopped [in front of] his face.", ["in front of", "behind", "above"], "in front of"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "Zafir closed his eyes. The stone dropped. It landed [next to] an old brass lamp on the table.", ["under", "next to", "above"], "next to"], ["ch11.jpg", "CHAPTER 11 — THE DESERT AT SUNSET 🇪🇬", "Zafir opened his eyes. \"Are you okay?\" asked Jia. \"Ask me tomorrow.\" He smiled. Jack tucked the bronze box [between] the others. The stars began to appear. Nobody rushed to leave. Finally Zafir stood. \"Turkey.\" Jack nodded. \"Let's go.\"", ["between", "above", "next to"], "between"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "Istanbul. The Grand Bazaar. Crowded and loud. The carpet crossed [over] the Bosphorus, ships tiny on the water far below.", ["over", "above", "below"], "over"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "\"Stay together,\" said Jia. \"I am together.\" \"With us.\" Zafir looked around. \"I knew that.\" Then he disappeared into the crowd. \"Zafir!\" Nothing. Jia grabbed Jack's sleeve. \"Don't chase him blindly.\" A familiar red feather suddenly bobbed into view. Zafir's little cap bounced [above] the crowd.", ["above", "below", "between"], "above"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "\"Over here!\" They pushed through the crowd. \"Don't disappear like that!\" \"Sorry.\" \"Where were you?\" \"I found a shop.\" Inside, a merchant pointed toward a turquoise box. It was sitting [between] two folded carpets, squeezed tight.", ["between", "next to", "above"], "between"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "Jia opened it. A small blue stone sat inside. She held it [close to] an old brass lamp to compare the light.", ["close to", "near", "above"], "close to"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "The two lights almost matched. Then a cat leapt onto the counter. It knocked a cup flying. The cup smashed on the floor, [below] the counter.", ["below", "above", "between"], "below"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "\"Sorry!\" said Jack. The merchant laughed. \"Don't worry. The cat does that every day.\" Jack grabbed the box. He placed it [next to] the growing pile inside the bag.", ["next to", "above", "between"], "next to"], ["ch12.jpg", "CHAPTER 12 — LOST IN THE BAZAAR 🇹🇷", "Outside, Zafir was waiting. He stood [near] the shop, arms crossed, tapping his foot. \"Ready?\" \"Ready.\" \"Senegal.\" Zafir looked back at the bazaar. \"One more stop.\"", ["near", "above", "behind"], "near"], ["ch13.jpg", "CHAPTER 13 — THE FISHERMAN 🇸🇳", "A small fishing village. The last country. The final journey took them across the sea to a small fishing village where a fisherman was mending his nets. The air smelled of salt and smoke. Children ran along the shore. A dog barked at the carpet. Jack waved. The dog barked again. \"Friendly place,\" said Jia. The fisherman looked up. \"Zafir?\" Zafir smiled. \"Hello.\" \"You know me?\" \"Of course.\" The fisherman laughed. He led them into his small wooden shed. Nets were strung [above] the entrance, drying in the last of the sun.", ["above", "below", "between"], "above"], ["ch13.jpg", "CHAPTER 13 — THE FISHERMAN 🇸🇳", "The fisherman opened a cupboard. He searched through it. Then he looked under a shelf. Then behind a bucket. Finally he shook his head. \"I've had this box for years.\" He pulled out a white box. It had been sitting [behind] a stack of heavy crates, forgotten for years.", ["under", "behind", "next to"], "behind"], ["ch13.jpg", "CHAPTER 13 — THE FISHERMAN 🇸🇳", "Jack crouched. \"That's definitely been there a while.\" The fisherman handed it to Jia. She opened it. The final stone began to glow, brighter than any before. It rose [above] her open hands.", ["above", "below", "between"], "above"], ["ch13.jpg", "CHAPTER 13 — THE FISHERMAN 🇸🇳", "The fisherman stepped back. Then the stone shot toward Zafir. It stopped [in front of] him, spinning slowly.", ["in front of", "behind", "above"], "in front of"], ["ch13.jpg", "CHAPTER 13 — THE FISHERMAN 🇸🇳", "\"This is it,\" said Zafir. \"Then you are free,\" said the fisherman. Zafir shook his head. \"Not yet.\" He looked at Jack and Jia. \"The boxes have to be together.\" Jack opened the bag. Jia looked inside. \"That's a lot of boxes.\" \"Let's count them,\" said Jack. \"No,\" said Zafir. \"Why?\" \"Because I don't want to hear you say the number out loud.\" Jack laughed. Together they laid the boxes out on the sand. Jia began arranging them carefully. \"Not like that,\" she said. Jack looked at her. \"What?\" \"The colours aren't important. But the boxes need room between them.\" She stepped back and checked the whole arrangement. They stood [next to] each other in a long, glowing row.", ["next to", "above", "between"], "next to"], ["ch13.jpg", "CHAPTER 13 — THE FISHERMAN 🇸🇳", "Jack stepped back. \"That's all twelve.\" Zafir looked at them. For the first time since they had met him, he looked nervous. \"Now we go home,\" he said. The carpet rose into the evening sky. The fisherman waved from the shore. The village grew smaller and sank [below] them. \"After all that,\" said Jack, \"I really want to know what's inside them.\" \"You'll find out soon,\" said Zafir. Jia looked at him. \"That sounds suspicious.\" \"It probably is.\"", ["below", "above", "behind"], "below"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "The same beach. Almost dark. The carpet brought them back to the same beach, the same rock, the same sea, the same place where Jack had first found the bottle. \"We're home,\" said Jia. \"Not quite,\" said Zafir. They walked toward the rock. Zafir set the twelve boxes down on the sand. Jack placed the first box [next to] the second.", ["next to", "above", "between"], "next to"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "Jia set the third [between] the first two, filling the gap.", ["between", "next to", "above"], "between"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "\"That's all twelve,\" said Jack. Zafir knelt down [in front of] the boxes and closed his eyes.", ["in front of", "behind", "above"], "in front of"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "Nothing happened. Jack waited. Jia waited. A wave rolled gently onto the sand. \"Maybe we did something wrong,\" said Jack. \"No,\" said Zafir. \"The boxes aren't the important part.\" He looked at Jack and Jia. \"They brought us here.\" He smiled. \"But that's not what breaks the spell.\" \"Then what does?\" asked Jia. Zafir pointed at the sky. The twelve boxes began to glow. Golden light rose [above] them.", ["above", "below", "between"], "above"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "Words began to appear inside the light. Chinese. Spanish. Indonesian. Japanese. French. Hindi. Portuguese. Arabic. Turkish. Wolof. English. The words drifted together into a long golden line. But something was missing. Empty spaces glowed [between] the words, waiting to be filled.", ["between", "above", "behind"], "between"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "Zafir stared at the glowing words. Then he laughed. \"Ah.\" \"What?\" asked Jack. \"I understand now.\" \"You understand what?\" \"The boxes weren't the answer.\" Jia smiled. \"They were the journey.\" Zafir nodded. \"Exactly.\" The floating words drifted down toward Jack and Jia. One small word landed [close to] Jack's feet in the sand.", ["close to", "near", "above"], "close to"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "\"These are the missing words,\" said Zafir. \"Only you can put them back.\" — THE FINAL GAPS APPEAR. THE STUDENT FILLS THEM TO COMPLETE THE SONG. — When the last word slid into place, the golden line locked together. The spell broke. Zafir stood very still. Then he laughed. Not the loud laugh Jack knew. Not the silly laugh. A quiet, surprised laugh. He was free. Really free. He looked at Jack. Then Jia. \"I don't know what to say.\" Jack shrugged. \"Try thank you.\" \"Thank you.\" \"Good.\" Jia laughed. Zafir rose into the air. He floated [over] the sea, arms wide, spinning slowly higher as the golden light faded.", ["over", "below", "behind"], "over"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "He came back down. The beach was quiet again. The twelve boxes lay empty on the sand. Zafir looked at Jack and Jia. \"So,\" said Jack. \"Where are you going now?\" Zafir thought about it. \"Home.\" \"Where's home?\" Zafir looked at them. \"Wherever my friends are.\" Jack shook his head. \"That's a bit cheesy.\" \"I've been trapped in a bottle for a thousand years. I'm allowed one cheesy line.\" Jia laughed. The three of them climbed onto the magic carpet. The moon was rising over the water. Jack looked down. The beach grew small beneath them. \"Wait.\" \"What?\" \"Same time next year?\" Jia smiled. \"Same time next—\" She stopped. The sand beneath the carpet's shadow had begun to glow. A golden light was pulsing in a perfect circle far below. \"Zafir.\" \"What?\" \"What's that?\" Zafir looked down. His smile disappeared. The glowing circle appeared [below] them, far below the carpet.", ["below", "above", "behind"], "below"], ["ch14.jpg", "CHAPTER 14 — THE SECRET 🌅", "Before he could answer, the circle opened. Jack dropped straight through it. \"JACK!\" The circle closed. Just sand. Stars. And the sound of the sea. Zafir stared at the place where Jack had disappeared. \"That was a portal.\" Jia looked at him. \"Where did it go?\" Zafir swallowed. \"Time.\" Jia stepped toward the place where Jack had vanished. For one brief moment, a faint golden doorway appeared [in front of] her, shimmering in the darkness. Jia looked at Zafir. \"Then we follow him.\" Zafir looked at her. \"Are you ready?\" She did not hesitate. \"Let's go.\" — TO BE CONTINUED IN GAME 3: JACK, JIA & ZAFIR — LOST IN TIME —", ["in front of", "behind", "above"], "in front of"]];
+var GATE_IDX = 15;
+var TOT = SS.filter(function(s){ return s[3]; }).length;
+var sc=0, si=0, on=false, attempted=0, wrongCount=0, isProcessing=false;
+var audioUnlocked=false;
+
+function makeSprinkle(freqs,noteDur,gap){
+  var sr=22050,totalDur=freqs.length*noteDur+(freqs.length-1)*gap,n=Math.floor(sr*totalDur);
+  var samples=new Int16Array(n);
+  for(var idx=0;idx<freqs.length;idx++){
+    var startSample=Math.floor(idx*(noteDur+gap)*sr),noteSamples=Math.floor(sr*noteDur);
+    for(var i=0;i<noteSamples;i++){
+      var t=i/sr,env=Math.pow(1-t/noteDur,2);
+      var pos=startSample+i;
+      if(pos<n) samples[pos]=Math.max(-32767,Math.min(32767,Math.floor(Math.sin(2*Math.PI*freqs[idx]*t)*env*20000)));
+    }
+  }
+  var dataSize=n*2,buf=new ArrayBuffer(44+dataSize),v=new DataView(buf);
+  function ws(o,s){for(var i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
+  ws(0,'RIFF');v.setUint32(4,36+dataSize,true);ws(8,'WAVE');ws(12,'fmt ');
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,dataSize,true);
+  for(var i=0;i<n;i++)v.setInt16(44+i*2,samples[i],true);
+  return buf;
+}
+function makeWav(freqs,duration,type){
+  var sr=22050,n=Math.floor(sr*duration),samples=new Int16Array(n);
+  for(var i=0;i<n;i++){
+    var t=i/sr,s=0,env=Math.max(0,1-t/duration*1.2);
+    for(var f=0;f<freqs.length;f++) s+=Math.sin(2*Math.PI*freqs[f]*t)*(type==='saw'?0.5+0.5*Math.sin(2*Math.PI*freqs[f]*0.5*t):1)/freqs.length;
+    samples[i]=Math.max(-32767,Math.min(32767,Math.floor(s*env*28000)));
+  }
+  var buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  function ws(o,s){for(var i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
+  ws(0,'RIFF');v.setUint32(4,36+n*2,true);ws(8,'WAVE');ws(12,'fmt ');
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,n*2,true);
+  for(var i=0;i<n;i++)v.setInt16(44+i*2,samples[i],true);
+  return buf;
+}
+function bufToUrl(buf){
+  var b=new Uint8Array(buf),s='';
+  for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]);
+  return 'data:audio/wav;base64,'+btoa(s);
+}
+var sndCorrect=null,sndWrong=null;
+function unlockAudio(){
+  if(audioUnlocked)return;
+  audioUnlocked=true;
+  try{
+    sndCorrect=new Audio(bufToUrl(makeSprinkle([1600,1900,2300,2800,3400],0.06,0.02)));
+    sndWrong=new Audio(bufToUrl(makeWav([300,200,150],0.4,'saw')));
+    sndCorrect.volume=0.5;sndWrong.volume=0.5;
+  }catch(e){}
+}
+document.addEventListener('touchstart',unlockAudio,{once:true});
+document.addEventListener('click',unlockAudio,{once:true});
+function playCorrect(){ try{if(sndCorrect){sndCorrect.currentTime=0;sndCorrect.play().catch(function(){});}}catch(e){} }
+function playWrong(){ try{if(sndWrong){sndWrong.currentTime=0;sndWrong.play().catch(function(){});}}catch(e){} }
+
+function showInstOverlay(){
+  try{ if(localStorage.getItem("zafir_seen")) return; }catch(e){}
+  var overlay=document.getElementById("inst-overlay");
+  var inst=document.getElementById("inst-msg");
+  var luck=document.getElementById("luck-msg");
+  if(!overlay||!inst||!luck) return;
+  overlay.classList.add("show");
+  setTimeout(function(){ inst.classList.add("visible"); }, 100);
+  setTimeout(function(){ inst.classList.remove("visible"); }, 3100);
+  setTimeout(function(){ luck.style.display="block"; setTimeout(function(){ luck.classList.add("visible"); }, 50); }, 3700);
+  setTimeout(function(){ luck.classList.remove("visible"); }, 5200);
+  setTimeout(function(){ overlay.classList.remove("show"); try{ localStorage.setItem("zafir_seen","1"); }catch(e){} }, 5800);
+}
+function showSc(id){var all=document.querySelectorAll(".screen");for(var i=0;i<all.length;i++)all[i].classList.remove("active");document.getElementById(id).classList.add("active");}
+function saveProgress(){
+  try{
+    localStorage.setItem("zafir_si",si);
+    localStorage.setItem("zafir_sc",sc);
+    localStorage.setItem("zafir_on",on?"1":"0");
+    localStorage.setItem("zafir_att",attempted);
+    localStorage.setItem("zafir_wc",wrongCount);
+  }catch(e){}
+}
+function loadProgress(){
+  try{
+    var saved_on=localStorage.getItem("zafir_on");
+    if(saved_on==="1"){
+      var saved_si=parseInt(localStorage.getItem("zafir_si")||"0");
+      var saved_sc=parseInt(localStorage.getItem("zafir_sc")||"0");
+      var saved_att=parseInt(localStorage.getItem("zafir_att")||"0");
+      var saved_wc=parseInt(localStorage.getItem("zafir_wc")||"0");
+      if(saved_si>0) return {si:saved_si,sc:saved_sc,att:saved_att,wc:saved_wc};
+    }
+  }catch(e){}
+  return null;
+}
+function clearProgress(){
+  try{
+    localStorage.removeItem("zafir_si");
+    localStorage.removeItem("zafir_sc");
+    localStorage.removeItem("zafir_on");
+    localStorage.removeItem("zafir_att");
+    localStorage.removeItem("zafir_wc");
+  }catch(e){}
+}
+function continueGame(){
+  var saved=loadProgress();
+  if(!saved) return startGame();
+  sc=saved.sc; si=saved.si; on=true; attempted=saved.att||saved.sc; wrongCount=saved.wc||0; isProcessing=false;
+  document.getElementById("tv").textContent=TOT;
+  document.getElementById("sv").textContent=(sc-wrongCount);
+  document.getElementById("pf").style.width=(sc/TOT*100)+"%";
+  document.getElementById("wo").classList.remove("show");
+  showSc("game-screen");
+  loadS(si);
+}
+function checkSavedGame(){
+  var saved=loadProgress();
+  if(saved&&saved.si>0){ document.getElementById("continue-btn").style.display="block"; }
+}
+function startGame(){sc=0;si=0;on=true;attempted=0;wrongCount=0;closeChartOverlay();document.getElementById("sv").textContent="0";document.getElementById("tv").textContent=TOT;document.getElementById("pf").style.width="0%";document.getElementById("wo").classList.remove("show");showSc("game-screen");loadS(0);}
+function restartGame(){stopFW();on=false;isProcessing=false;clearProgress();document.getElementById("wo").classList.remove("show");setTimeout(startGame,80);}
+var prev=0;
+function openChart(f){prev=f;showSc("chart-screen");document.getElementById("chi").scrollTop=0;}
+function closeChart(){showSc(prev===0?"title-screen":"game-screen");}
+function openInst(f){prev=f;showSc("inst-screen");document.getElementById("iin").scrollTop=0;}
+function closeInst(){showSc(prev===0?"title-screen":"game-screen");}
+
+function shuffleArr(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+  }
+  return a;
+}
+function renderChests(opts){
+  var wrap=document.getElementById("chests");
+  wrap.innerHTML="";
+  if(!opts){ return; }
+  for(var i=0;i<opts.length;i++){
+    (function(word){
+      var chest=document.createElement("div");
+      chest.className="chest";
+      chest.onclick=function(){ pickWord(word); };
+      chest.innerHTML='<div class="cx-glow"></div><img src="box-open-cutout.png" alt="" class="cx-img"><div class="cw">'+word.toUpperCase()+'</div>';
+      wrap.appendChild(chest);
+    })(opts[i]);
+  }
+}
+
+function loadS(idx){
+  isProcessing=false;
+  if(idx===GATE_IDX && typeof isPurchased==="function" && !isPurchased()){
+    on=false; prev=1;
+    setTimeout(function(){ showSc("paywall-screen"); }, 2000);
+  }
+  if(idx===0){ showInstOverlay(); }
+  if(idx>=SS.length){
+    on=false; clearProgress();
+    setTimeout(function(){ bigFW(); setTimeout(function(){ stopFW(); buildEndScreen(TOT-wrongCount); showSc("end-screen"); },3500); },300);
+    return;
+  }
+  var s=SS[idx];
+  document.getElementById("bg").style.backgroundImage="url('"+s[0]+"')";
+  document.getElementById("slbl").textContent=s[1];
+  var box=document.getElementById("st");
+  box.innerHTML="";
+  box.classList.remove("fade");
+  var opts=s[3]?shuffleArr(s[3]):s[3];
+  renderChests(opts);
+  var parts=s[2].split(/\[([^\]]+)\]/);
+  var gc=0;
+  for(var i=0;i<parts.length;i++){
+    if(i%2===0){
+      if(parts[i]){ var tsp=document.createElement("span"); tsp.innerHTML=parts[i]; box.appendChild(tsp); }
+    } else {
+      var g=document.createElement("span");
+      g.className="gap"; g.id="gap-"+gc;
+      g.setAttribute("data-answer",parts[i].toLowerCase());
+      g.textContent="___";
+      box.appendChild(g);
+      gc++;
+    }
+  }
+  if(gc===0){ setTimeout(function(){ si=idx+1; loadS(si); },2800); }
+}
+
+function pickWord(word){
+  if(!on)return;
+  var g=document.querySelector("#st .gap:not(.correct)");
+  if(!g)return;
+  if(word===g.getAttribute("data-answer")){
+    g.classList.add("correct"); playCorrect(); g.textContent=word.toUpperCase();
+    sc++; attempted++;
+    document.getElementById("sv").textContent=(sc-wrongCount);
+    document.getElementById("tv").textContent=TOT;
+    document.getElementById("pf").style.width=(sc/TOT*100)+"%";
+    miniFW(); saveProgress();
+    var nxt=si+1;
+    setTimeout(function(){ si=nxt; loadS(si); },1600);
+  } else {
+    attempted++;
+    if(!g.getAttribute("data-had-wrong")){ wrongCount++; g.setAttribute("data-had-wrong","1"); }
+    g.classList.add("wrong"); playWrong();
+    document.getElementById("wo").classList.add("show");
+    setTimeout(function(){ g.classList.remove("wrong"); document.getElementById("wo").classList.remove("show"); },900);
+  }
+}
+
+function buildEndScreen(score){
+  var total=TOT;
+  var emoji,grade;
+  if(score>=total&&wrongCount===0){emoji="&#x1F451;";grade="PERFECT!";}
+  else if(score>=90){emoji="&#x1F525;";grade="INCREDIBLE!";}
+  else if(score>=78){emoji="&#x1F3AF;";grade="OUTSTANDING!";}
+  else if(score>=62){emoji="&#x2B50;";grade="GREAT EXPLORER!";}
+  else if(score>=48){emoji="&#x1F44D;";grade="GOOD QUEST!";}
+  else{emoji="&#x1F331;";grade="KEEP SEARCHING!";}
+  document.getElementById("end-emoji").innerHTML=emoji;
+  document.getElementById("end-grade").textContent=grade;
+  document.getElementById("end-score").textContent="YOU SCORED "+score+" OUT OF "+total;
+  var grades=[
+    {min:0,max:47,emoji:"&#x1F331;",label:"KEEP SEARCHING!"},
+    {min:48,max:61,emoji:"&#x1F44D;",label:"GOOD QUEST!"},
+    {min:62,max:77,emoji:"&#x2B50;",label:"GREAT EXPLORER!"},
+    {min:78,max:89,emoji:"&#x1F3AF;",label:"OUTSTANDING!"},
+    {min:90,max:99,emoji:"&#x1F525;",label:"INCREDIBLE!"},
+    {min:100,max:100,emoji:"&#x1F451;",label:"PERFECT!"}
+  ];
+  var ladder=document.getElementById("grade-ladder");
+  ladder.innerHTML="";
+  var header=document.createElement("div");
+  header.style.cssText="font-family:'Bangers',cursive;color:#FFD700;font-size:clamp(0.8rem,3vw,1rem);letter-spacing:2px;text-align:center;margin-bottom:0.4rem;";
+  header.textContent="GRADE LADDER";
+  ladder.appendChild(header);
+  for(var gi=grades.length-1;gi>=0;gi--){
+    var gr=grades[gi];
+    var isCurrent=(gr.label===grade);
+    var isAchieved=score>gr.max;
+    var row=document.createElement("div");
+    var bg=isCurrent?"rgba(217,166,255,0.35)":isAchieved?"rgba(80,200,80,0.15)":"rgba(255,255,255,0.04)";
+    var border=isCurrent?"3px solid #FFD700":isAchieved?"1px solid #50c850":"1px solid rgba(255,255,255,0.08)";
+    var txtCol=isCurrent?"#FFD700":isAchieved?"#90ee90":"rgba(255,255,255,0.4)";
+    var labelSize=isCurrent?"clamp(1rem,3.8vw,1.2rem)":"clamp(0.75rem,2.8vw,0.95rem)";
+    var scoreSize=isCurrent?"clamp(0.8rem,2.8vw,1rem)":"clamp(0.65rem,2.2vw,0.8rem)";
+    var bold=isCurrent?"font-weight:900;text-shadow:0 0 10px currentColor;":"";
+    var scoreRange=gr.max===100?"100 = PERFECT":gr.min+"-"+gr.max+" correct";
+    row.style.cssText="display:flex;align-items:center;gap:0.5rem;padding:"+(isCurrent?"0.55rem":"0.3rem")+" 0.6rem;margin-bottom:0.3rem;border-radius:10px;background:"+bg+";border:"+border+";"+(isCurrent?"transform:scale(1.03);box-shadow:0 4px 20px rgba(217,166,255,0.4);":"");
+    row.innerHTML="<span style='font-size:"+(isCurrent?"1.4rem":"1.1rem")+"'>"+gr.emoji+"</span><span style='font-family:Bangers,cursive;color:"+txtCol+";font-size:"+labelSize+";letter-spacing:1px;flex:1;"+bold+"'>"+gr.label+"</span><span style='font-family:Nunito,sans-serif;font-size:"+scoreSize+";color:"+txtCol+";"+bold+"'>"+scoreRange+"</span>"+(isCurrent?"<span style='font-size:1rem'>&#x2B05;</span>":"");
+    ladder.appendChild(row);
+  }
+}
+var chartOverlayReady = false;
+function populateChartOverlay(){
+  if(chartOverlayReady) return;
+  chartOverlayReady = true;
+  var inner = document.getElementById("chart-overlay-inner");
+  var src = document.getElementById("chi");
+  if(src && inner){
+    for(var i=0;i<src.children.length;i++){
+      var el=src.children[i];
+      if(!el.classList.contains("chud")) inner.appendChild(el.cloneNode(true));
+    }
+  }
+}
+var chartTimers=[];
+function clearChartTimers(){chartTimers.forEach(function(t){clearTimeout(t);});chartTimers=[];}
+function startWithChart(){
+  showSc("title-screen");
+  populateChartOverlay();
+  clearChartTimers();
+  var intro = document.getElementById("chart-intro-msg");
+  var overlay = document.getElementById("chart-overlay");
+  chartTimers.push(setTimeout(function(){
+    if(intro){ intro.style.display="flex"; setTimeout(function(){ intro.classList.add("visible"); }, 50); }
+  }, 800));
+  chartTimers.push(setTimeout(function(){
+    if(intro){ intro.classList.remove("visible"); }
+    chartTimers.push(setTimeout(function(){
+      if(intro){ intro.style.display="none"; }
+      if(overlay){
+        overlay.style.display="block";
+        overlay.scrollTop = overlay.scrollHeight;
+        chartTimers.push(setTimeout(function(){
+          overlay.classList.add("unrolling");
+          chartTimers.push(setTimeout(function(){
+            var duration = 4000, startTime = null, startScroll = overlay.scrollTop;
+            function scrollUp(timestamp){
+              if(!startTime) startTime = timestamp;
+              var progress = (timestamp - startTime) / duration;
+              if(progress < 1){ overlay.scrollTop = startScroll * (1 - progress); requestAnimationFrame(scrollUp); }
+              else { overlay.scrollTop = 0; var topBtn=document.getElementById("chart-top-btn"); if(topBtn){topBtn.style.display="block";} }
+            }
+            requestAnimationFrame(scrollUp);
+          }, 2900));
+        }, 50));
+      }
+    }, 1200));
+  }, 4500));
+}
+function closeChartOverlay(){
+  clearChartTimers();
+  var o=document.getElementById("chart-overlay");
+  if(o){ o.classList.remove("unrolling"); o.style.pointerEvents="none"; o.style.display="none"; o.style.clipPath=""; o.style.opacity=""; o.style.transition=""; var topBtn=document.getElementById("chart-top-btn"); if(topBtn){ topBtn.style.display="none"; } }
+  var intro=document.getElementById("chart-intro-msg");
+  if(intro){ intro.classList.remove("visible"); intro.style.display="none"; intro.style.pointerEvents="none"; }
+}
+function launchQuest(){
+  clearChartTimers();
+  var overlay = document.getElementById("chart-overlay");
+  var btn = document.getElementById("quest-btn");
+  if(btn){ btn.textContent="\u26A1 LAUNCHING..."; btn.style.background="rgba(153,51,255,0.9)"; }
+  if(overlay){ overlay.style.transition="opacity 0.4s ease"; overlay.style.opacity="0"; }
+  setTimeout(function(){ closeChartOverlay(); if(overlay){ overlay.style.opacity=""; overlay.style.transition=""; } startGame(); }, 400);
+}
+var fwC=document.getElementById("fwc"),fwX=fwC.getContext("2d"),fwP=[],fwOn=false,fwR=null,fwActive=0;
+function rsz(){fwC.width=window.innerWidth;fwC.height=window.innerHeight;}rsz();window.addEventListener("resize",rsz);
+function burst(x,y,n){var c=["#FFD700","#D9A6FF","#9933FF","#00FFCC","#FF6600","#00FF88","#FF69B4","#44AAFF","#FFCC00","#FF4444"];for(var i=0;i<n;i++){var a=(Math.PI*2/n)*i+Math.random()*0.4,spd=2+Math.random()*3.5;fwP.push({x:x,y:y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-1.5,col:c[i%c.length],life:1,decay:0.028+Math.random()*0.022,sz:1.5+Math.random()*2.5});}}
+function animFW(){fwX.clearRect(0,0,fwC.width,fwC.height);var alive=[];for(var i=0;i<fwP.length;i++){var p=fwP[i];if(p.life>0){p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.life-=p.decay;fwX.beginPath();fwX.arc(p.x,p.y,Math.max(0.1,p.sz*p.life),0,Math.PI*2);fwX.fillStyle=p.col;fwX.shadowColor=p.col;fwX.shadowBlur=6;fwX.fill();fwX.shadowBlur=0;alive.push(p);}}fwP=alive;if(fwOn||fwP.length>0){fwR=requestAnimationFrame(animFW);}else{fwC.style.display="none";fwR=null;}}
+function miniFW(){
+  fwC.style.display="block"; fwActive++; fwOn=true;
+  var panel=document.getElementById("sp");
+  var cx=window.innerWidth*0.5;
+  var cy=panel ? panel.getBoundingClientRect().top - 30 : window.innerHeight*0.6;
+  burst(cx,cy,20); burst(cx+(Math.random()-0.5)*60,cy-(Math.random()*40),12);
+  if(!fwR){animFW();}
+  var myActive=fwActive;
+  setTimeout(function(){ if(fwActive===myActive){fwOn=false;} },650);
+}
+function bigFW(){fwC.style.display="block";fwOn=true;var n=0;var iv=setInterval(function(){burst(Math.random()*fwC.width,Math.random()*fwC.height*0.65,52);n++;if(n>=6)clearInterval(iv);},340);if(!fwR)animFW();}
+function stopFW(){fwOn=false;fwP=[];if(fwR){cancelAnimationFrame(fwR);fwR=null;}fwX.clearRect(0,0,fwC.width,fwC.height);fwC.style.display="none";}
+checkSavedGame();
+</script>
+<script>
+var PURCHASE_KEY = 'zafir_purchased';
+var SKU_ID = 'full_game_unlock';
+function isPurchased() { return localStorage.getItem(PURCHASE_KEY) === 'true'; }
+function markPurchased() { localStorage.setItem(PURCHASE_KEY, 'true'); }
+async function buyFullGame() {
+  try {
+    if (!window.getDigitalGoodsService) {
+      // TODO: replace with the real Play Store listing URL once Game 2 is published
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.gamesforimprovingEnglish.zafirquest';
+      return;
+    }
+    var service = await window.getDigitalGoodsService('https://play.google.com/billing');
+    var request = new PaymentRequest(
+      [{ supportedMethods: 'https://play.google.com/billing', data: { sku: SKU_ID } }],
+      { total: { label: 'Full Game', amount: { currency: 'USD', value: '0.50' } } }
+    );
+    var response = await request.show();
+    var purchaseToken = response.details.purchaseToken;
+    await response.complete('success');
+    var purchases = await service.listPurchases();
+    var owned = purchases.some(function(p) { return p.itemId === SKU_ID; });
+    if (owned) {
+      await service.consume(purchaseToken).catch(function(){});
+      markPurchased();
+      showSc('game-screen');
+      loadS(GATE_IDX);
+    } else {
+      alert('Purchase could not be verified. Please try again.');
+    }
+  } catch (err) { console.error('Purchase error:', err); }
+}
+if ("serviceWorker" in navigator) { navigator.serviceWorker.register("pwabuilder-sw.js"); }
+</script>
+</body>
+</html>
