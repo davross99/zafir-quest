@@ -97,6 +97,14 @@ body { font-family:"Nunito",sans-serif; user-select:none; }
 .itp span { color:#FFD700; }
 .iok { color:#90ee90; }
 .ibd { color:#ff8888; }
+#rq { position:fixed; inset:0; z-index:100000; background:rgba(10,0,20,0.75); display:none; align-items:center; justify-content:center; padding:1rem; }
+#rq.show { display:flex; }
+.rqb { background:linear-gradient(160deg,#2a0d4d,#1a0030); border:2px solid #FFD700; border-radius:20px; padding:1.4rem 1.6rem; text-align:center; max-width:340px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
+.rqt { font-family:"Bangers",cursive; color:#FFD700; font-size:clamp(1.4rem,6vw,1.9rem); letter-spacing:2px; }
+.rqs { font-family:"Nunito",sans-serif; font-weight:800; color:#f5e8c0; font-size:clamp(0.95rem,3.8vw,1.1rem); margin:0.6rem 0 1.1rem; }
+.rqbtns { display:flex; gap:0.8rem; justify-content:center; }
+.rqno { background:#FFD700; color:#1a0030; border-color:#FFD700; min-width:90px; }
+.rqyes { background:transparent; color:#D9A6FF; border-color:#D9A6FF; min-width:90px; }
 #wo { position:fixed; inset:0; z-index:200; background:rgba(130,0,0,0.48); display:none; align-items:center; justify-content:center; flex-direction:column; gap:0.5rem; }
 #wo.show { display:flex; animation:wfl 0.3s ease; }
 @keyframes wfl { 0%{background:rgba(220,0,0,0.75)} 100%{background:rgba(130,0,0,0.48)} }
@@ -231,7 +239,7 @@ body { font-family:"Nunito",sans-serif; user-select:none; }
     <button class="bh bgg" onclick="openChart(1)">CHART</button>
     <button class="bh bbl" onclick="openInst(1)">HELP</button>
     <button class="bh bgy" id="backbtn" onclick="goBack()" aria-label="Back">&#x25C0;</button>
-    <button class="bh br" onclick="restartGame()">RESTART</button>
+    <button class="bh br" onclick="askRestart()">RESTART</button>
   </div>
   <div id="prog"><div id="pf"></div></div>
   <div id="slbl">CHAPTER 1</div>
@@ -284,6 +292,7 @@ body { font-family:"Nunito",sans-serif; user-select:none; }
   <button class="btn-gold" onclick="buyFullGame()">BUY NOW &#x2022; $0.50</button>
 </div>
 <canvas id="fwc"></canvas>
+<div id="rq"><div class="rqb"><div class="rqt">START AGAIN?</div><div class="rqs">Your progress and score will be lost.</div><div class="rqbtns"><button class="btn-sm rqno" onclick="closeRestart()">NO</button><button class="btn-sm rqyes" onclick="closeRestart();restartGame()">YES</button></div></div></div>
 <div id="wo"><div class="wm">WRONG!</div><div class="ws">Try again!</div></div>
 <div id="chart-intro-msg">
   <div style="background:rgba(20,0,30,0.92);border:2px solid rgba(217,166,255,0.8);border-radius:20px;padding:1.8rem 2rem;max-width:320px;text-align:center;margin:0 1.5rem;box-shadow:0 0 40px rgba(0,0,0,0.8);">
@@ -517,6 +526,19 @@ function loadS(idx){
   }
 }
 var VIEW=-1, DONE={}, WRONGK={};
+function askRestart(){ document.getElementById("rq").classList.add("show"); }
+function closeRestart(){ document.getElementById("rq").classList.remove("show"); }
+function isShown(id){ var e=document.getElementById(id); return !!e && e.classList.contains("active"); }
+/* Called by the Android app's Back button. Returns true when the game handled it. */
+window.zqBack=function(){
+  if(document.getElementById("rq").classList.contains("show")){ closeRestart(); return true; }
+  var ov=document.getElementById("chart-overlay");
+  if(ov && ov.style.display && ov.style.display!=="none"){ launchQuest(); return true; }
+  if(isShown("inst-screen")){ closeInst(); return true; }
+  if(isShown("chart-screen")){ closeChart(); return true; }
+  if(isShown("game-screen") && on){ var from=(VIEW>=0?VIEW:si); if(from>0){ goBack(); return true; } }
+  return false;
+};
 function goBack(){
   if(!on) return;
   var from=(VIEW>=0?VIEW:si), t=from-1;
