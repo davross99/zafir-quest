@@ -105,14 +105,12 @@ body { font-family:"Nunito",sans-serif; user-select:none; }
 .rqbtns { display:flex; gap:0.8rem; justify-content:center; }
 .rqno { background:#FFD700; color:#1a0030; border-color:#FFD700; min-width:90px; }
 .rqyes { background:transparent; color:#D9A6FF; border-color:#D9A6FF; min-width:90px; }
-#wd { position:fixed; inset:0; z-index:100001; background:rgba(10,0,20,0.55); display:none; align-items:center; justify-content:center; padding:1rem; }
-#wd.show { display:flex; animation:wfl 0.25s ease; }
-.wdc { background:linear-gradient(160deg,#2a0d4d,#1a0030); border:2px solid #ff5555; border-radius:20px; padding:1rem 1.2rem 1.1rem; text-align:center; max-width:330px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
-.wdh { font-family:"Bangers",cursive; color:#ff5555; font-size:clamp(1.3rem,5.5vw,1.7rem); letter-spacing:2px; }
-.wdw { font-family:"Bangers",cursive; color:#FFD700; font-size:clamp(1.6rem,7vw,2.2rem); letter-spacing:2px; margin-top:0.2rem; }
-.wdsvg { width:100%; max-width:240px; height:auto; display:block; margin:0.3rem auto; }
-.wdg { font-family:"Nunito",sans-serif; font-weight:800; color:#f5e8c0; font-size:clamp(1rem,4vw,1.15rem); }
-.wdt { font-family:"Nunito",sans-serif; font-weight:700; color:#D9A6FF; font-size:clamp(0.85rem,3.4vw,1rem); margin:0.5rem 0 0.8rem; }
+#wdl { position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%); width:max-content; max-width:94vw; display:none; align-items:center; gap:0.55rem; background:rgba(20,0,35,0.84); border:1px solid rgba(217,166,255,0.45); border-radius:12px; padding:0.3rem 0.7rem 0.3rem 0.4rem; pointer-events:none; }
+#wdl.show { display:flex; animation:wdin 0.25s ease; }
+#wdl svg { width:100px; height:auto; flex:0 0 auto; display:block; }
+#wdl .wdtx { font-family:"Nunito",sans-serif; font-weight:800; color:#f5e8c0; font-size:clamp(0.8rem,3.4vw,0.95rem); line-height:1.25; }
+#wdl .wdtx b { color:#FFD700; }
+@keyframes wdin { from { opacity:0; } to { opacity:1; } }
 #wo { position:fixed; inset:0; z-index:200; background:rgba(130,0,0,0.48); display:none; align-items:center; justify-content:center; flex-direction:column; gap:0.5rem; }
 #wo.show { display:flex; animation:wfl 0.3s ease; }
 @keyframes wfl { 0%{background:rgba(220,0,0,0.75)} 100%{background:rgba(130,0,0,0.48)} }
@@ -252,7 +250,7 @@ body { font-family:"Nunito",sans-serif; user-select:none; }
   <div id="prog"><div id="pf"></div></div>
   <div id="slbl">CHAPTER 1</div>
   <div id="bottomPanel">
-    <div id="chests"></div>
+    <div id="wdl"></div><div id="chests"></div>
     <div id="sp"><div id="st"></div></div>
   </div>
 </div>
@@ -301,7 +299,6 @@ body { font-family:"Nunito",sans-serif; user-select:none; }
 </div>
 <canvas id="fwc"></canvas>
 <div id="rq"><div class="rqb"><div class="rqt">START AGAIN?</div><div class="rqs">Your progress and score will be lost.</div><div class="rqbtns"><button class="btn-sm rqno" onclick="closeRestart()">NO</button><button class="btn-sm rqyes" onclick="closeRestart();restartGame()">YES</button></div></div></div>
-<div id="wd" onclick="closeWD()"><div class="wdc"><div class="wdh">NOT QUITE!</div><div class="wdw" id="wdw"></div><div id="wdpic"></div><div class="wdg" id="wdg"></div><div class="wdt">Look at the picture and try again.</div><button class="btn-sm rqno" onclick="closeWD()">TRY AGAIN</button></div></div>
 <div id="wo"><div class="wm">WRONG!</div><div class="ws">Try again!</div></div>
 <div id="chart-intro-msg">
   <div style="background:rgba(20,0,30,0.92);border:2px solid rgba(217,166,255,0.8);border-radius:20px;padding:1.8rem 2rem;max-width:320px;text-align:center;margin:0 1.5rem;box-shadow:0 0 40px rgba(0,0,0,0.8);">
@@ -491,7 +488,7 @@ var curOpts=null, curGapPos=0;
 function renderNext(idx){ var wrap=document.getElementById("chests"); wrap.innerHTML=""; var b=document.createElement("button"); b.className="btn-gold"; b.innerHTML="NEXT &#x25B6;"; b.style.margin="0.3rem auto 0.6rem"; b.onclick=function(){ if(!on) return; si=idx+1; saveProgress(); loadS(si); }; wrap.appendChild(b); }
 
 function loadS(idx){
-  ADV_TOKEN++; SCREEN_T0=Date.now(); VIEW=-1;
+  hideWD(); ADV_TOKEN++; SCREEN_T0=Date.now(); VIEW=-1;
   isProcessing=false;
   if(PAYWALL_ENABLED && idx===GATE_IDX && typeof isPurchased==="function" && !isPurchased()){
     on=false; prev=1;
@@ -540,7 +537,6 @@ function closeRestart(){ document.getElementById("rq").classList.remove("show");
 function isShown(id){ var e=document.getElementById(id); return !!e && e.classList.contains("active"); }
 /* Called by the Android app's Back button. Returns true when the game handled it. */
 window.zqBack=function(){
-  if(document.getElementById("wd").classList.contains("show")){ closeWD(); return true; }
   if(document.getElementById("rq").classList.contains("show")){ closeRestart(); return true; }
   var ov=document.getElementById("chart-overlay");
   if(ov && ov.style.display && ov.style.display!=="none"){ launchQuest(); return true; }
@@ -549,47 +545,56 @@ window.zqBack=function(){
   if(isShown("game-screen") && on){ var from=(VIEW>=0?VIEW:si); if(from>0){ goBack(); return true; } }
   return false;
 };
-/* ---- Wrong-answer diagrams: show what the chosen word means (never the answer) ---- */
+/* ---- Wrong-answer hint: a small line showing what the chosen word means (never the answer) ---- */
 var WD_GLOSS={
- "above":"higher than something",
- "over":"higher than something, often moving across it",
- "below":"lower than something",
- "under":"right underneath something",
- "on top of":"resting on the top of something",
- "next to":"right beside something",
- "near":"a short distance from something",
- "close to":"a short distance from something",
- "behind":"at the back of something",
- "in front of":"at the front of something",
- "between":"with one thing on each side"
+ "above":"higher than something, with a space between.",
+ "over":"directly higher than something.",
+ "below":"lower than something, with a space between.",
+ "under":"directly lower than something.",
+ "on top of":"resting on the surface of something.",
+ "next to":"right beside something.",
+ "near":"a short distance from something.",
+ "close to":"a very short distance from something.",
+ "behind":"on the other side of something.",
+ "in front of":"between you and something.",
+ "between":"with one thing on each side."
 };
-function wdBox(x,y,o){ return '<g opacity="'+(o||1)+'"><rect x="'+x+'" y="'+y+'" width="30" height="26" rx="4" fill="#FFD700" stroke="#8B6914" stroke-width="2.5"/><line x1="'+x+'" y1="'+(y+9)+'" x2="'+(x+30)+'" y2="'+(y+9)+'" stroke="#8B6914" stroke-width="2"/><rect x="'+(x+12)+'" y="'+(y+6)+'" width="6" height="7" rx="1.5" fill="#8B6914"/></g>'; }
-function wdObj(x,y,w,h){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="8" fill="#7A6A99" stroke="#B98CE0" stroke-width="2.5"/>'; }
+function wdBox(x,y){ return '<g><rect x="'+x+'" y="'+y+'" width="56" height="40" rx="5" fill="#FFD700" stroke="#8B6914" stroke-width="3"/><line x1="'+x+'" y1="'+(y+13)+'" x2="'+(x+56)+'" y2="'+(y+13)+'" stroke="#8B6914" stroke-width="2.5"/><rect x="'+(x+23)+'" y="'+(y+9)+'" width="10" height="11" rx="2" fill="#8B6914"/></g>'; }
+function wdLampShape(dash){
+  if(dash) return '<path d="M6 18 Q22 34 38 18 Z M38 18 L52 8" fill="none" stroke="#cfe3ff" stroke-width="2" stroke-dasharray="4 3"/>';
+  return '<ellipse cx="22" cy="28" rx="9" ry="2.5" fill="#7d9cc2"/>'+
+   '<path d="M6 18 Q22 34 38 18 Z" fill="#a9c8ef" stroke="#3d5f8c" stroke-width="2.2"/>'+
+   '<path d="M36 19 L52 8 L50 13 L37 23 Z" fill="#a9c8ef" stroke="#3d5f8c" stroke-width="1.8"/>'+
+   '<path d="M7 19 Q-4 20 4 27" fill="none" stroke="#3d5f8c" stroke-width="2.2"/>'+
+   '<path d="M13 18 Q22 8 31 18" fill="#cfe3ff" stroke="#3d5f8c" stroke-width="1.8"/>'+
+   '<circle cx="22" cy="10" r="2.5" fill="#3d5f8c"/>';
+}
+function wdLamp(x,y,dash){ return '<g transform="translate('+x+' '+y+') scale(1.25)">'+wdLampShape(dash)+'</g>'; }
 function wdSVG(word){
-  var o=wdObj(65,52,70,40), b="";
+  var B=wdBox(92,56), b;  /* box spans x92-148, y56-96; lamp is about 65 x 37 */
   switch(word){
-    case "above": b=o+wdBox(85,8); break;
-    case "over": b=o+wdBox(85,8); break;
-    case "below": b=o+wdBox(85,110); break;
-    case "under": b=o+wdBox(85,95); break;
-    case "on top of": b=o+wdBox(85,26); break;
-    case "next to": b=o+wdBox(135,66); break;
-    case "near": case "close to": b=o+wdBox(158,66); break;
-    case "behind": b=wdBox(100,40)+o+'<rect x="100" y="40" width="30" height="26" rx="4" fill="none" stroke="#FFD700" stroke-width="2" stroke-dasharray="4 3"/>'; break;
-    case "in front of": b=o+'<ellipse cx="100" cy="94" rx="19" ry="4" fill="rgba(0,0,0,0.35)"/>'+wdBox(85,66); break;
-    case "between": b=wdObj(22,52,52,40)+wdObj(126,52,52,40)+wdBox(85,66); break;
+    case "above": b=B+wdLamp(92,4); break;
+    case "over": b=B+wdLamp(92,12); break;
+    case "on top of": b=B+wdLamp(92,18); break;
+    case "under": b=B+wdLamp(92,89); break;
+    case "below": b=B+wdLamp(92,105); break;
+    case "next to": b=B+wdLamp(150,58); break;
+    case "close to": b=B+wdLamp(160,58); break;
+    case "near": b=B+wdLamp(174,58); break;
+    case "behind": b=wdLamp(100,32)+B+wdLamp(100,32,true); break;
+    case "in front of": b=B+wdLamp(92,66); break;
+    case "between": b=wdBox(20,56)+wdBox(164,56)+wdLamp(92,58); break;
     default: return "";
   }
-  return '<svg class="wdsvg" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+b+'</svg>';
+  return '<svg viewBox="0 0 240 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+b+'</svg>';
 }
 function showWD(word){
-  var w=String(word).toLowerCase();
-  document.getElementById("wdw").textContent=w.toUpperCase();
-  document.getElementById("wdpic").innerHTML=wdSVG(w);
-  document.getElementById("wdg").textContent=WD_GLOSS[w]?(w.charAt(0).toUpperCase()+w.slice(1)+" means "+WD_GLOSS[w]+"."):"";
-  document.getElementById("wd").classList.add("show");
+  var w=String(word).toLowerCase(), el=document.getElementById("wdl");
+  if(!WD_GLOSS[w]){ el.classList.remove("show"); return; }
+  el.innerHTML=wdSVG(w)+'<div class="wdtx"><b>'+w.charAt(0).toUpperCase()+w.slice(1)+'</b> means '+WD_GLOSS[w]+'</div>';
+  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
 }
-function closeWD(){ document.getElementById("wd").classList.remove("show"); }
+function hideWD(){ var el=document.getElementById("wdl"); if(el) el.classList.remove("show"); }
 function goBack(){
   if(!on) return;
   var from=(VIEW>=0?VIEW:si), t=from-1;
@@ -597,7 +602,7 @@ function goBack(){
   showReview(t);
 }
 function showReview(idx){
-  ADV_TOKEN++; VIEW=idx; isProcessing=false;
+  hideWD(); ADV_TOKEN++; VIEW=idx; isProcessing=false;
   var s=SS[idx];
   document.getElementById("bg").style.backgroundImage="url('"+s[0]+"')"; document.getElementById("bgblur").style.backgroundImage="url('"+s[0]+"')";
   document.getElementById("slbl").textContent=s[1];
@@ -621,6 +626,7 @@ function pickWord(word){
   if(!g)return;
   if(VIEW>=0) return;
   var gk=si+"-"+curGapPos;
+  hideWD();
   if(word===g.getAttribute("data-answer")){
     g.classList.add("correct"); playCorrect(); g.textContent=word.toUpperCase();
     if(!DONE[gk]){ DONE[gk]=1; sc++; } attempted++;
